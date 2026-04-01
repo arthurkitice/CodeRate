@@ -1,71 +1,53 @@
 import customtkinter as ctk
-from ui.views.users_test_view import UsersTestView
-
+from ui.views.login_view import LoginView
+from ui.views.register_view import RegisterView
+from ui.views.auth_selector_view import AuthSelectorView
+from ui.views.user_dashboard_view import DashboardView
 
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
 
-
-class App(ctk.CTk):
+class MainApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("CodeRate Testes")
-        self.geometry("1100x700")
+        self.title("CodeRate")
+        self.geometry("600x500")  # Tamanho melhor
 
-        self.grid_columnconfigure(0, weight=0)
-        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        # Sidebar
-        self.sidebar = ctk.CTkFrame(self, width=220, corner_radius=0)
-        self.sidebar.grid(row=0, column=0, sticky="ns")
-        self.sidebar.grid_columnconfigure(0, weight=1)
-
-        self.logo_label = ctk.CTkLabel(
-            self.sidebar,
-            text="CodeRate",
-            font=ctk.CTkFont(size=24, weight="bold")
-        )
-        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 30))
-
-        self.users_button = ctk.CTkButton(
-            self.sidebar,
-            text="Usuários",
-            command=self.show_users_tests
-        )
-        self.users_button.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
-
-        self.exit_button = ctk.CTkButton(
-            self.sidebar,
-            text="Sair",
-            command=self.destroy
-        )
-        self.exit_button.grid(row=99, column=0, padx=20, pady=20, sticky="ew")
-
-        # Área principal
         self.content = ctk.CTkFrame(self)
-        self.content.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+        self.content.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
         self.content.grid_rowconfigure(0, weight=1)
         self.content.grid_columnconfigure(0, weight=1)
 
-        self.show_home()
+        self.show_auth_selector()
 
     def clear_content(self):
         for widget in self.content.winfo_children():
             widget.destroy()
 
-    def show_home(self):
+    def show_auth_selector(self):
         self.clear_content()
+        view = AuthSelectorView(self.content,
+            on_login=self.show_login,
+            on_register=self.show_register)
+        view.grid(row=0, column=0, sticky="nsew")
 
-        label = ctk.CTkLabel(
-            self.content,
-            text="Selecione uma área na sidebar para testar os métodos.",
-            font=ctk.CTkFont(size=22, weight="bold")
-        )
-        label.grid(row=0, column=0, padx=20, pady=20, sticky="nw")
-
-    def show_users_tests(self):
+    def show_login(self):
         self.clear_content()
-        view = UsersTestView(self.content)
+        view = LoginView(self.content,
+            on_authenticated=self.show_dashboard,
+            on_back=self.show_auth_selector)
+        view.grid(row=0, column=0, sticky="nsew")
+
+    def show_register(self):
+        self.clear_content()
+        view = RegisterView(self.content, on_registered=self.show_dashboard, on_back=self.show_auth_selector)
+        view.grid(row=0, column=0, sticky="nsew")
+
+    def show_dashboard(self, user):
+        self.clear_content()
+        view = DashboardView(self.content, user=user, on_logout=self.show_auth_selector)
         view.grid(row=0, column=0, sticky="nsew")

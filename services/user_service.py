@@ -11,6 +11,19 @@ class UserService:
     def _hash_password(self, password: str) -> str:
         return hashlib.sha256(password.encode()).hexdigest()
 
+    def authenticate_user(self, db: Session, email: str, password: str) -> User:
+        user = self.repository.get_by_email(db, email)
+
+        if user is None:
+            raise ValueError("Email não encontrado")
+
+        hashed_password = self._hash_password(password)
+
+        if user.password != hashed_password:
+            raise ValueError("Senha incorreta")
+
+        return user
+
     def create_user(self, db: Session, name: str, email: str, password: str) -> User:
         existing_user = self.repository.get_by_email(db, email)
 

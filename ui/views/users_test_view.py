@@ -11,8 +11,9 @@ class UsersTestView(ctk.CTkFrame):
 
         self.user_service = UserService()
 
+        self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(7, weight=1)
+        self.grid_rowconfigure(8, weight=1)
 
         title = ctk.CTkLabel(
             self,
@@ -22,32 +23,21 @@ class UsersTestView(ctk.CTkFrame):
         title.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="w")
 
         # ID
-        self.id_label = ctk.CTkLabel(self, text="ID")
-        self.id_label.grid(row=1, column=0, padx=20, pady=10, sticky="w")
-
-        self.id_entry = ctk.CTkEntry(self)
-        self.id_entry.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
+        
+        self.id_entry = ctk.CTkEntry(self, placeholder_text="ID")
+        self.id_entry.grid(row=1, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
         # Nome
-        self.name_label = ctk.CTkLabel(self, text="Nome")
-        self.name_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
-
-        self.name_entry = ctk.CTkEntry(self)
-        self.name_entry.grid(row=2, column=1, padx=20, pady=10, sticky="ew")
+        self.name_entry = ctk.CTkEntry(self, placeholder_text="Nome")
+        self.name_entry.grid(row=2, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
         # Email
-        self.email_label = ctk.CTkLabel(self, text="Email")
-        self.email_label.grid(row=3, column=0, padx=20, pady=10, sticky="w")
-
-        self.email_entry = ctk.CTkEntry(self)
-        self.email_entry.grid(row=3, column=1, padx=20, pady=10, sticky="ew")
+        self.email_entry = ctk.CTkEntry(self, placeholder_text="Email")
+        self.email_entry.grid(row=3, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
         # Senha
-        self.password_label = ctk.CTkLabel(self, text="Senha")
-        self.password_label.grid(row=4, column=0, padx=20, pady=10, sticky="w")
-
-        self.password_entry = ctk.CTkEntry(self, show="*")
-        self.password_entry.grid(row=4, column=1, padx=20, pady=10, sticky="ew")
+        self.password_entry = ctk.CTkEntry(self, placeholder_text="Senha", show="*")
+        self.password_entry.grid(row=4, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
         # Botões
         self.create_button = ctk.CTkButton(self, text="Criar", command=self.create_user)
@@ -62,7 +52,7 @@ class UsersTestView(ctk.CTkFrame):
         self.update_button = ctk.CTkButton(self, text="Atualizar", command=self.update_user)
         self.update_button.grid(row=6, column=1, padx=20, pady=10, sticky="ew")
 
-        self.delete_button = ctk.CTkButton(self, text="Deletar", command=self.delete_user)
+        self.delete_button = ctk.CTkButton(self, text="Deletar", command=self.delete_user, fg_color="red", hover_color="#cc0a0a")
         self.delete_button.grid(row=7, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
 
         # Saída
@@ -102,7 +92,7 @@ class UsersTestView(ctk.CTkFrame):
 
             output = []
             for user in users:
-                output.append(f"ID: {user.id} | Nome: {user.name} | Email: {user.email}")
+                output.append(f"ID: {user.id} | Nome: {user.name} | Email: {user.email} | Senha: {user.password}")
 
             self.write_output("\n".join(output))
         except Exception as e:
