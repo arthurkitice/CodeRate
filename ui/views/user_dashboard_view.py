@@ -8,27 +8,37 @@ class DashboardView(ctk.CTkFrame):
         self.user = user
         self.on_logout = on_logout
         
-        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
         # Título
         self.label = ctk.CTkLabel(
             self,
-            text=f"Bem-vindo, {self.user.name}!",
-            font=ctk.CTkFont(size=22, weight="bold")
+            text="CodeRate",
+            font=ctk.CTkFont(size=22, weight="bold"),
+            justify="left"
         )
         self.label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
+
+        self.label = ctk.CTkLabel(
+            self,
+            text=f"{self.user.name}",
+            font=ctk.CTkFont(size=22, weight="bold"),
+            justify="left"
+        )
+        self.label.grid(row=0, column=2, padx=20, pady=20, sticky="w")
 
         # Subtítulo (opcional)
         self.subtitle = ctk.CTkLabel(
             self,
-            text="Você está autenticado no sistema.",
-            font=ctk.CTkFont(size=14)
+            text="\nCritérios de Avaliação",
+            font=ctk.CTkFont(size=14),
+            justify="left"
         )
-        self.subtitle.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="w")
+        self.subtitle.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="n")
 
         # Botão
         self.logout_button = ctk.CTkButton(self, text="Encerrar Sessão", command=self.logout)
-        self.logout_button.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+        self.logout_button.grid(row=0, column=3, padx=20, pady=10, sticky="ew")
 
     def logout(self):
         self.on_logout()

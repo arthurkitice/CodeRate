@@ -7,12 +7,9 @@ from ui.views.user_dashboard_view import DashboardView
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
 
-class MainApp(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-
-        self.title("CodeRate")
-        self.geometry("600x500")  # Tamanho melhor
+class MainApp(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)

@@ -7,34 +7,32 @@ class AuthSelectorView(ctk.CTkFrame):
         self.on_register = on_register
         
         # Configurar grid
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=0)  # Título mínimo
-        self.grid_rowconfigure(1, weight=1)  # Espaço em branco
-        self.grid_rowconfigure(2, weight=0)  # Botões mínimos
+        self.grid_columnconfigure(1, weight=1)
 
         # Título
         self.label = ctk.CTkLabel(
             self,  # << Direto em self, não em self.content
-            text="Bem-vindo ao CodeRate!",
+            text="CodeRate",
             font=ctk.CTkFont(size=22, weight="bold"),
-            justify="center"
+            justify="left"
         )
-        self.label.grid(row=0, column=0, padx=20, pady=20, sticky="ew")
+        self.label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
 
         # Subtítulo
         self.subtitle = ctk.CTkLabel(
             self,
-            text="Faça login ou registre-se para continuar.",
-            font=ctk.CTkFont(size=14)
+            text="\nCritérios de Avaliação",
+            font=ctk.CTkFont(size=14),
+            justify="left"
         )
         self.subtitle.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="n")
 
         # Botões
         self.register_button = ctk.CTkButton(self, text="Registrar", command=self.register)
-        self.register_button.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+        self.register_button.grid(row=0, column=2, padx=20, pady=10, sticky="ew")
 
         self.login_button = ctk.CTkButton(self, text="Login", command=self.login)
-        self.login_button.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+        self.login_button.grid(row=0, column=3, padx=20, pady=10, sticky="ew")
 
     def register(self):
         self.on_register()

@@ -10,50 +10,59 @@ class App(ctk.CTk):
         super().__init__()
 
         self.title("CodeRate")
-        self.geometry("600x500")  # Tamanho melhor
+        self.geometry("1100x700")
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        self.content = ctk.CTkFrame(self)
-        self.content.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
-    
-        self.content.grid_columnconfigure(0, weight=1)
-        self.content.grid_columnconfigure(1, weight=1)  # << Adicione isso
+        self.current_view = None
+        self.show_menu()
 
+    def clear_current_view(self):
+        if self.current_view is not None:
+            self.current_view.destroy()
 
-        # Título
-        self.label = ctk.CTkLabel(
-            self.content,
-            text=f"CodeRate",
+    def show_menu(self):
+        self.clear_current_view()
+
+        frame = ctk.CTkFrame(self)
+        frame.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_columnconfigure(1, weight=1)
+
+        label = ctk.CTkLabel(
+            frame,
+            text="CodeRate",
             font=ctk.CTkFont(size=22, weight="bold")
         )
-        self.label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="w")
+        label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="w")
 
-        # Subtítulo (opcional)
-        self.subtitle = ctk.CTkLabel(
-            self.content,
+        subtitle = ctk.CTkLabel(
+            frame,
             text="Escolha qual aplicação deseja acessar.",
             font=ctk.CTkFont(size=14)
         )
-        self.subtitle.grid(row=1, column=0, columnspan=2, padx=20, pady=(0, 20), sticky="w")
+        subtitle.grid(row=1, column=0, columnspan=2, padx=20, pady=(0, 20), sticky="w")
 
-        self.content.app_button = ctk.CTkButton(self.content, text="Principal", command=self.app_initialize)
-        self.content.app_button.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+        app_button = ctk.CTkButton(frame, text="Principal", command=self.show_main_app)
+        app_button.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
 
-        self.content.test_button = ctk.CTkButton(self.content, text="Testes", command=self.app_test)
-        self.content.test_button.grid(row=2, column=1, padx=20, pady=10, sticky="ew")
+        test_button = ctk.CTkButton(frame, text="Testes", command=self.show_test_app)
+        test_button.grid(row=2, column=1, padx=20, pady=10, sticky="ew")
 
-    def clear_content(self):
-        for widget in self.content.winfo_children():
-            widget.destroy()
+        self.current_view = frame
 
-    def app_initialize(self):
-        self.destroy()
-        app = MainApp()
-        app.mainloop()
+    def show_main_app(self):
+        self.clear_current_view()
+        self.current_view = MainApp(self)
+        self.current_view.grid(row=0, column=0, sticky="nsew")
 
-    def app_test(self):
-        self.destroy()
-        app = TestApp()
-        app.mainloop()
+    def show_test_app(self):
+        self.clear_current_view()
+        self.current_view = TestApp(self)
+        self.current_view.grid(row=0, column=0, sticky="nsew")
+
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()

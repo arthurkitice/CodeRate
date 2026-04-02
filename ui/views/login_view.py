@@ -11,28 +11,42 @@ class LoginView(ctk.CTkFrame):
         self.user_service = UserService()
         
         self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(7, weight=1)
+
 
         # Título
         label = ctk.CTkLabel(
             self,
-            text="Login",
-            font=ctk.CTkFont(size=22, weight="bold")
+            text="CodeRate",
+            font=ctk.CTkFont(size=24, weight="bold"),
+            justify="center"
         )
-        label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
+        label.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
+
+        label = ctk.CTkLabel(
+            self,
+            text="Cadastrar",
+            font=ctk.CTkFont(size=14),
+            justify="center"
+        )
+        label.grid(row=2, column=1, padx=20, pady=10, sticky="ew")
 
         # Campos
         self.email_entry = ctk.CTkEntry(self, placeholder_text="Email")
-        self.email_entry.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
+        self.email_entry.grid(row=3, column=1, padx=20, pady=10, sticky="ew")
 
         self.password_entry = ctk.CTkEntry(self, placeholder_text="Senha", show="*")
-        self.password_entry.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+        self.password_entry.grid(row=4, column=1, padx=20, pady=10, sticky="ew")
 
         # Botões
         self.login_button = ctk.CTkButton(self, text="Login", command=self.login)
-        self.login_button.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+        self.login_button.grid(row=5, column=1, padx=20, pady=10, sticky="ew")
 
         self.back_button = ctk.CTkButton(self, text="Voltar", command=self.back)
-        self.back_button.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
+        self.back_button.grid(row=6, column=1, padx=20, pady=10, sticky="ew")
 
     def back(self):
         self.on_back()

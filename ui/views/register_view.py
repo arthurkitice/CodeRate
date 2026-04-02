@@ -9,33 +9,47 @@ class RegisterView(ctk.CTkFrame):
         self.on_registered = on_registered
         self.on_back = on_back
         self.user_service = UserService()
-        
+
         self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(8, weight=1)
+
 
         # Título
-        self.label = ctk.CTkLabel(
+        label = ctk.CTkLabel(
             self,
-            text="Registrar no sistema",
-            font=ctk.CTkFont(size=22, weight="bold")
+            text="CodeRate",
+            font=ctk.CTkFont(size=24, weight="bold"),
+            justify="center"
         )
-        self.label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
+        label.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
+
+        label = ctk.CTkLabel(
+            self,
+            text="Conectar",
+            font=ctk.CTkFont(size=14),
+            justify="center"
+        )
+        label.grid(row=2, column=1, padx=20, pady=10, sticky="ew")
 
         # Campos
         self.name_entry = ctk.CTkEntry(self, placeholder_text="Nome")
-        self.name_entry.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
+        self.name_entry.grid(row=3, column=1, padx=20, pady=10, sticky="ew")
 
         self.email_entry = ctk.CTkEntry(self, placeholder_text="Email")
-        self.email_entry.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+        self.email_entry.grid(row=4, column=1, padx=20, pady=10, sticky="ew")
 
         self.password_entry = ctk.CTkEntry(self, placeholder_text="Senha", show="*")
-        self.password_entry.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+        self.password_entry.grid(row=5, column=1, padx=20, pady=10, sticky="ew")
 
         # Botões
         self.register_button = ctk.CTkButton(self, text="Registrar", command=self.register)
-        self.register_button.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
+        self.register_button.grid(row=6, column=1, padx=20, pady=10, sticky="ew")
 
         self.back_button = ctk.CTkButton(self, text="Voltar", command=self.back)
-        self.back_button.grid(row=5, column=0, padx=20, pady=10, sticky="ew")
+        self.back_button.grid(row=7, column=1, padx=20, pady=10, sticky="ew")
 
     def back(self):
         self.on_back()

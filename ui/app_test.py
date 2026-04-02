@@ -6,12 +6,9 @@ ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
 
 
-class TestApp(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-
-        self.title("CodeRate Testes")
-        self.geometry("1100x700")
+class TestApp(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
 
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
