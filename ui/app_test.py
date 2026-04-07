@@ -1,5 +1,6 @@
 import customtkinter as ctk
-from ui.views.users_test_view import UsersTestView
+from ui.views.test_views.users_test_view import UsersTestView
+from ui.views.test_views.criteria_test_view import CriteriaTestView
 
 
 ctk.set_appearance_mode("system")
@@ -32,6 +33,13 @@ class TestApp(ctk.CTkFrame):
             command=self.show_users_tests
         )
         self.users_button.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
+
+        self.criteria_button = ctk.CTkButton(
+            self.sidebar,
+            text="Critérios",
+            command=self.show_criteria_tests
+        )
+        self.criteria_button.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
 
         self.exit_button = ctk.CTkButton(
             self.sidebar,
@@ -66,4 +74,9 @@ class TestApp(ctk.CTkFrame):
     def show_users_tests(self):
         self.clear_content()
         view = UsersTestView(self.content)
+        view.grid(row=0, column=0, sticky="nsew")
+
+    def show_criteria_tests(self):
+        self.clear_content()
+        view = CriteriaTestView(self.content)
         view.grid(row=0, column=0, sticky="nsew")
