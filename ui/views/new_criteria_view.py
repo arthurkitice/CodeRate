@@ -13,38 +13,54 @@ class NewCriteriaView(ctk.CTkFrame):
         self.criteria_service = CriteriaService()
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
-        self.rowconfigure(5, weight=1)
 
         # Título
-        label = ctk.CTkLabel(
+        self.label = ctk.CTkLabel(
             self,
             text="CodeRate",
-            font=ctk.CTkFont(size=24, weight="bold"),
+            font=ctk.CTkFont(size=38, weight="bold"),
+            justify="left"
         )
-        label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
+        self.label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
 
-        label = ctk.CTkLabel(self, text="Novo Critério", font=ctk.CTkFont(size=14))
-        label.grid(row=1, column=0, padx=20, pady=10, sticky="w")
+        self.subtitle = ctk.CTkLabel(
+            self,
+            text="Novo Critério",
+            font=ctk.CTkFont(size=26),
+            justify="left"
+        )
+        self.subtitle.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="w")
 
         # Campos
-        label = ctk.CTkLabel(self, text="Nome", font=ctk.CTkFont(size=12))
+        label = ctk.CTkLabel(self, text="Nome", font=ctk.CTkFont(size=18))
         label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
 
-        self.name_entry = ctk.CTkEntry(self, placeholder_text="Nome do critério")
-        self.name_entry.grid(row=3, column=0, columnspan=2, padx=20, pady=10, sticky="ew")
+        self.name_entry = ctk.CTkEntry(self, height=40)
+        self.name_entry.grid(row=3, column=0, columnspan=2, padx=20, pady=(0, 10), sticky="ew")
 
-        label = ctk.CTkLabel(self, text="Descrição", font=ctk.CTkFont(size=12))
+        label = ctk.CTkLabel(self, text="Descrição", font=ctk.CTkFont(size=18))
         label.grid(row=4, column=0, padx=20, pady=10, sticky="w")
 
-        self.description_entry = ctk.CTkTextbox(self)
-        self.description_entry.grid(row=5, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
+        self.description_entry = ctk.CTkTextbox(self, height=400, border_width=2)
+        self.description_entry.grid(row=5, column=0, columnspan=2, padx=20, pady=(0, 10), sticky="nsew")
         
         # Botões
-        self.create_button = ctk.CTkButton(self, text="Criar", command=self.create_criteria)
-        self.create_button.grid(row=6, column=0, padx=20, pady=10, sticky="ew")
+        self.create_button = ctk.CTkButton(
+            self, 
+            text="Criar Critério", 
+            command=self.create_criteria, 
+            font=ctk.CTkFont(size=15),
+            height=35
+        )
+        self.create_button.grid(row=6, column=0, padx=20, pady=30, sticky="ew")
 
-        self.back_button = ctk.CTkButton(self, text="Voltar", command=self.back)
-        self.back_button.grid(row=6, column=1, padx=20, pady=10, sticky="ew")
+        self.back_button = ctk.CTkButton(self, 
+            text="Voltar", 
+            command=self.back, 
+            font=ctk.CTkFont(size=15), 
+            height=35
+        )
+        self.back_button.grid(row=6, column=1, padx=20, pady=30, sticky="ew")
 
     def back(self):
         self.on_back()

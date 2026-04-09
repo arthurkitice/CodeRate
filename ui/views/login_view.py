@@ -61,9 +61,9 @@ class LoginView(ctk.CTkFrame):
     def back(self):
         self.on_back()
 
-    def _create_entry(parent, placeholder, **kwargs):
+    def _create_entry(self, placeholder, **kwargs):
         return ctk.CTkEntry(
-            parent,
+            self,
             font=ctk.CTkFont(size=15),
             width=350,
             height=35,
@@ -74,9 +74,9 @@ class LoginView(ctk.CTkFrame):
             **kwargs
         )
 
-    def _create_button(parent, text, command):
+    def _create_button(self, text, command):
         return ctk.CTkButton(
-            parent,
+            self,
             font=ctk.CTkFont(size=15),
             width=350,
             height=35,

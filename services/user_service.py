@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from repositories.user_repository import UserRepository
 from models import User
-import hashlib
+import bcrypt
 
 
 class UserService:
@@ -9,7 +9,11 @@ class UserService:
         self.repository = UserRepository()
 
     def _hash_password(self, password: str) -> str:
-        return hashlib.sha256(password.encode()).hexdigest()
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode(), salt).decode()
+    
+    def _verify_password(self, password: str, hashed: str) -> str:
+        return bcrypt.checkpw(password.encode(), hashed.encode())
     
     def _email_already_exists(self, db: Session, email: str) -> bool:
         existing_user = self.repository.get_by_email(db, email)
@@ -21,9 +25,9 @@ class UserService:
         if user is None:
             raise ValueError("Email não encontrado")
 
-        hashed_password = self._hash_password(password)
+        password_correct = self._verify_password(password, user.password)
 
-        if user.password != hashed_password:
+        if not password_correct:
             raise ValueError("Senha incorreta")
 
         return user
@@ -36,7 +40,7 @@ class UserService:
 
         user = User(name=name, email=email, password=hashed_password)
 
-        return self.repository.create(db=db, user=user)
+        return self.repository.create(db, user)
 
     def list_users(self, db: Session) -> list[User]:
         return self.repository.get_all(db)
@@ -73,7 +77,7 @@ class UserService:
             hashed_password = self._hash_password(new_password)
             user.password = hashed_password
 
-        return self.repository.update(user)
+        return self.repository.update(db, user)
 
     def delete_user(self, db: Session, user_id: int) -> bool:
         user = self.repository.get_by_id(db, user_id)

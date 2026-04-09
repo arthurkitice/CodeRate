@@ -16,7 +16,6 @@ class RegisterView(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(9, weight=1)
 
-
         # Título
         label = ctk.CTkLabel(
             self,
@@ -46,7 +45,6 @@ class RegisterView(ctk.CTkFrame):
         self.name_entry = self._create_entry("Nome de usuário")
         self.name_entry.grid(row=4, column=1, padx=20, pady=10)
 
-        
         self.email_entry = self._create_entry("Email@dominio.com")
         self.email_entry.grid(row=5, column=1, padx=20, pady=10)
 
@@ -98,6 +96,10 @@ class RegisterView(ctk.CTkFrame):
 
         if not name or not email or not password:
             messagebox.showerror("Erro", "Preencha nome, email e senha.")
+            return
+
+        if len(name) > 25:
+            messagebox.showerror("Erro", "Nome de usuário muito grande (Máx. 25 caractéres).")
             return
 
         db = SessionLocal()
