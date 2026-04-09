@@ -3,7 +3,7 @@ from ui.app import MainApp
 from ui.app_test import TestApp
 
 ctk.set_appearance_mode("system")
-ctk.set_default_color_theme("blue")
+ctk.set_default_color_theme("ui/color_theme.json")
 
 class App(ctk.CTk):
     def __init__(self):
@@ -61,7 +61,6 @@ class App(ctk.CTk):
         self.clear_current_view()
         self.current_view = TestApp(self)
         self.current_view.grid(row=0, column=0, sticky="nsew")
-
 
 if __name__ == "__main__":
     app = App()

@@ -4,7 +4,7 @@ from ui.views.test_views.criteria_test_view import CriteriaTestView
 
 
 ctk.set_appearance_mode("system")
-ctk.set_default_color_theme("blue")
+ctk.set_default_color_theme("ui/color_theme.json")
 
 
 class TestApp(ctk.CTkFrame):
@@ -19,6 +19,12 @@ class TestApp(ctk.CTkFrame):
         self.sidebar = ctk.CTkFrame(self, width=220, corner_radius=0)
         self.sidebar.grid(row=0, column=0, sticky="ns")
         self.sidebar.grid_columnconfigure(0, weight=1)
+
+        # Área principal
+        self.content = ctk.CTkFrame(self)
+        self.content.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+        self.content.grid_rowconfigure(0, weight=1)
+        self.content.grid_columnconfigure(0, weight=1)
 
         self.logo_label = ctk.CTkLabel(
             self.sidebar,
@@ -48,12 +54,6 @@ class TestApp(ctk.CTkFrame):
             fg_color="red"
         )
         self.exit_button.grid(row=99, column=0, padx=20, pady=20, sticky="ew")
-
-        # Área principal
-        self.content = ctk.CTkFrame(self)
-        self.content.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
-        self.content.grid_rowconfigure(0, weight=1)
-        self.content.grid_columnconfigure(0, weight=1)
 
         self.show_home()
 

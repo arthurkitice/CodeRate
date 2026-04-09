@@ -5,7 +5,7 @@ from ui.views.auth_selector_view import AuthSelectorView
 from ui.views.user_dashboard_view import DashboardView
 
 ctk.set_appearance_mode("system")
-ctk.set_default_color_theme("blue")
+ctk.set_default_color_theme("ui/color_theme.json")
 
 class MainApp(ctk.CTkFrame):
     def __init__(self, parent):
