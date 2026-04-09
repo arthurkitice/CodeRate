@@ -36,7 +36,7 @@ class RegisterView(ctk.CTkFrame):
 
         label = ctk.CTkLabel(
             self,
-            text="Cadastre seus dados para criar a conta",
+            text="Crie sua conta e comece a avaliar seus códigos",
             font=ctk.CTkFont(size=18),
             justify="center"
         )
@@ -46,11 +46,16 @@ class RegisterView(ctk.CTkFrame):
         self.name_entry = self._create_entry("Nome de usuário")
         self.name_entry.grid(row=4, column=1, padx=20, pady=10)
 
+        
         self.email_entry = self._create_entry("Email@dominio.com")
         self.email_entry.grid(row=5, column=1, padx=20, pady=10)
 
         self.password_entry = self._create_entry("Senha", show="*")
         self.password_entry.grid(row=6, column=1, padx=20, pady=10)
+
+        self.name_entry.bind("<Return>", lambda e: self.email_entry.focus())
+        self.email_entry.bind("<Return>", lambda e: self.password_entry.focus())
+        self.password_entry.bind("<Return>", lambda e: self.register())
 
         # Botões
         self.register_button = self._create_button("Cadastrar", self.register)
@@ -59,11 +64,11 @@ class RegisterView(ctk.CTkFrame):
         self.back_button = self._create_button("Voltar", self.back)
         self.back_button.grid(row=8, column=1, padx=20, pady=10)
 
-    def _create_entry(parent, placeholder, **kwargs):
+    def _create_entry(self, placeholder, **kwargs):
         return ctk.CTkEntry(
-            parent,
+            self,
             font=ctk.CTkFont(size=15),
-            width=400,
+            width=350,
             height=35,
             placeholder_text=placeholder,
             border_width=0,
@@ -72,11 +77,11 @@ class RegisterView(ctk.CTkFrame):
             **kwargs
         )
 
-    def _create_button(parent, text, command):
+    def _create_button(self, text, command):
         return ctk.CTkButton(
-            parent,
+            self,
             font=ctk.CTkFont(size=15),
-            width=400,
+            width=350,
             height=35,
             text=text,
             cursor="hand2",

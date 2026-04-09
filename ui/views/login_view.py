@@ -48,6 +48,10 @@ class LoginView(ctk.CTkFrame):
         self.password_entry = self._create_entry("Senha", show="*")
         self.password_entry.grid(row=5, column=1, padx=20, pady=10)
 
+        self.email_entry.bind("<Return>", lambda e: self.password_entry.focus())
+        self.password_entry.bind("<Return>", lambda e: self.login())
+        
+        # Botões
         self.login_button = self._create_button("Login", self.login)
         self.login_button.grid(row=6, column=1, padx=20, pady=10)
 
@@ -61,7 +65,7 @@ class LoginView(ctk.CTkFrame):
         return ctk.CTkEntry(
             parent,
             font=ctk.CTkFont(size=15),
-            width=400,
+            width=350,
             height=35,
             placeholder_text=placeholder,
             border_width=0,
@@ -74,7 +78,7 @@ class LoginView(ctk.CTkFrame):
         return ctk.CTkButton(
             parent,
             font=ctk.CTkFont(size=15),
-            width=400,
+            width=350,
             height=35,
             text=text,
             cursor="hand2",
