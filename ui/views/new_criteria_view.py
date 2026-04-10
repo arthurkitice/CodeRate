@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from services.criteria_service import CriteriaService
+from services.user_service import UserService
 from database import SessionLocal
 
 class NewCriteriaView(ctk.CTkFrame):
@@ -77,7 +78,7 @@ class NewCriteriaView(ctk.CTkFrame):
         try:
             criteria = self.criteria_service.create_criteria(db, name, description, self.user_id)
             if criteria:
-                self.on_criteria_created(criteria)
+                self.on_criteria_created()
             else:
                 messagebox.showerror("Erro", "Não foi possível criar o critério.")
         except Exception as e:

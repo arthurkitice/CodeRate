@@ -9,13 +9,14 @@ edit_icon = ctk.CTkImage(dark_image=Image.open("ui/icons/edit_icon.png"), size=(
 trash_icon = ctk.CTkImage(dark_image=Image.open("ui/icons/trash_icon.png"), size=(30, 30))
 
 class DashboardView(ctk.CTkFrame):
-    def __init__(self, parent, user, on_logout):
+    def __init__(self, parent, user, on_criteria_create, on_logout):
         super().__init__(parent)
         self.user_service = UserService()
         self.criteria_service = CriteriaService()
         self.user = user
+        self.on_criteria_create = on_criteria_create
         self.on_logout = on_logout
-        self.build_ui()
+        self.show_dashboard()
 
     def _gen_criteria_list(self):
         criteria = self.user.criteria
@@ -29,15 +30,8 @@ class DashboardView(ctk.CTkFrame):
             widget.destroy()
 
     def create_criteria(self):
-        self.clear_content()
-        self.grid_rowconfigure(1, weight=1)
-        view = NewCriteriaView(
-            self,
-            on_criteria_created=self.show_dashboard,
-            on_back=self.show_dashboard,
-            user_id=self.user.id
-        )
-        view.grid(row=1, column=1, rowspan=3, sticky="nsew")
+        user_id = self.user.id
+        self.on_criteria_create(user_id)
 
     def show_dashboard(self, *args):
         self.clear_content()
