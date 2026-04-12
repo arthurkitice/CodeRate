@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from services.user_service import UserService
-from database import SessionLocal
+from database import get_db
 
 class RegisterView(ctk.CTkFrame):
     def __init__(self, parent, on_registered, on_back):
@@ -87,6 +87,10 @@ class RegisterView(ctk.CTkFrame):
         )
     
     def back(self):
+        self.name_entry.delete(0, "end")
+        self.email_entry.delete(0, "end")
+        self.password_entry.delete(0, "end")
+        self.focus()
         self.on_back()
 
     def register(self):
@@ -102,11 +106,13 @@ class RegisterView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Nome de usuário muito grande (Máx. 25 caractéres).")
             return
 
-        db = SessionLocal()
         try:
-            user = self.user_service.create_user(db, name, email, password)
-            self.on_registered(user)
+            with get_db() as db:
+                user = self.user_service.create_user(db, name, email, password)
+                self.name_entry.delete(0, "end")
+                self.email_entry.delete(0, "end")
+                self.password_entry.delete(0, "end")
+                self.focus()
+                self.on_registered(user)
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()

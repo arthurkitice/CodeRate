@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from repositories.criteria_repository import CriteriaRepository
 from services.user_service import UserService
 from models import Criteria
+from dtos.user_dto import CriteriaDTO
 
 class CriteriaService:
     def __init__(self):
@@ -16,7 +17,7 @@ class CriteriaService:
     def _is_description_invalid(self, description: str) -> bool:
         return len(description) > 500 or len(description) == 0
 
-    def create_criteria(self, db: Session, name: str, description: str, user_id: int) -> Criteria:
+    def create_criteria(self, db: Session, name: str, description: str, user_id: int) -> CriteriaDTO:
         if self._is_user_id_invalid(db, user_id):
             raise ValueError("ID de usuário inválido")
 
@@ -28,16 +29,52 @@ class CriteriaService:
 
         criteria = Criteria(name=name, description=description, user_id=user_id)
 
-        return self.repository.create(db=db, criteria=criteria)
+        self.repository.create(db=db, criteria=criteria)
 
-    def list_criteria(self, db: Session) -> list[Criteria]:
-        return self.repository.get_all(db)
+        return CriteriaDTO(
+            id = criteria.id,
+            name = criteria.name,
+            description=criteria.description,
+            user_id=criteria.user_id
+        )
 
-    def get_criteria_by_id(self, db: Session, criteria_id: int) -> Criteria | None:
-        return self.repository.get_by_id(db, criteria_id)
+    def list_criteria(self, db: Session) -> list[CriteriaDTO]:
+        criteria_list = self.repository.get_all(db)
+
+        return [
+            CriteriaDTO(
+                id=c.id, 
+                name=c.name, 
+                description=c.description, 
+                user_id=c.user_id
+            ) 
+            for c in criteria_list
+        ]
+
+    def get_criteria_by_id(self, db: Session, criteria_id: int) -> CriteriaDTO | None:
+        criteria = self.repository.get_by_id(db, criteria_id)
+
+        if criteria is None:
+            return None
+        
+        return CriteriaDTO(
+            id = criteria.id,
+            name = criteria.name,
+            description=criteria.description,
+            user_id=criteria.user_id
+        )
     
-    def list_criteria_by_user_id(self, db: Session, user_id: int) -> list[Criteria]:
-        return self.repository.list_by_user_id(db, user_id)
+    def list_criteria_by_user_id(self, db: Session, user_id: int) -> list[CriteriaDTO]:
+        criteria_list = self.repository.list_by_user_id(db, user_id)
+        return [
+            CriteriaDTO(
+                id=c.id, 
+                name=c.name, 
+                description=c.description, 
+                user_id=c.user_id
+            ) 
+            for c in criteria_list
+        ]
 
     def update_criteria(
         self,
@@ -45,7 +82,7 @@ class CriteriaService:
         criteria_id: int,
         new_name: str | None = None,
         new_description: str | None = None
-    ) -> Criteria | None:
+    ) -> CriteriaDTO | None:
         
         criteria = self.repository.get_by_id(db, criteria_id)
 
@@ -62,7 +99,14 @@ class CriteriaService:
                 raise ValueError("Descrição de critério inválida")
             criteria.description = new_description
 
-        return self.repository.update(db, criteria)
+        updated_criteria = self.repository.update(db, criteria)
+
+        return CriteriaDTO(
+            id = updated_criteria.id,
+            name = updated_criteria.name,
+            description=updated_criteria.description,
+            user_id=updated_criteria.user_id
+        )
 
     def delete_criteria(self, db: Session, criteria_id: int) -> bool:
         criteria = self.repository.get_by_id(db, criteria_id)

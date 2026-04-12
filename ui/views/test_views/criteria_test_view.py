@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 
-from database import SessionLocal
+from database import get_db
 from services.criteria_service import CriteriaService
 
 
@@ -75,33 +75,29 @@ class CriteriaTestView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Preencha nome, descrição e ID do usuário.")
             return
 
-        db = SessionLocal()
         try:
-            criteria = self.criteria_service.create_criteria(db, name, description, int(user_id))
-            self.write_output(f"Critério criado com sucesso:\nID: {criteria.id}\nNome: {criteria.name}\nDescrição: {criteria.description}")
+            with get_db() as db:
+                criteria = self.criteria_service.create_criteria(db, name, description, int(user_id))
+                self.write_output(f"Critério criado com sucesso:\nID: {criteria.id}\nNome: {criteria.name}\nDescrição: {criteria.description}")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
 
     def list_all_criteria(self):
-        db = SessionLocal()
         try:
-            criteria_list = self.criteria_service.list_criteria(db)
+            with get_db() as db:
+                criteria_list = self.criteria_service.list_criteria(db)
 
-            if not criteria_list:
-                self.write_output("Nenhum critério cadastrado.")
-                return
+                if not criteria_list:
+                    self.write_output("Nenhum critério cadastrado.")
+                    return
 
-            output = []
-            for criteria in criteria_list:
-                output.append(f"ID: {criteria.id} | Nome: {criteria.name} | Descrição: {criteria.description} | ID do usuário: {criteria.user_id}")
+                output = []
+                for criteria in criteria_list:
+                    output.append(f"ID: {criteria.id} | Nome: {criteria.name} | Descrição: {criteria.description} | ID do usuário: {criteria.user_id}")
 
-            self.write_output("\n".join(output))
+                self.write_output("\n".join(output))
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
 
     def list_criteria_by_id(self):
         id = self.id_entry.get().strip()
@@ -110,19 +106,17 @@ class CriteriaTestView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Informe um ID.")
             return
 
-        db = SessionLocal()
         try:
-            criteria = self.criteria_service.get_criteria_by_id(db, int(id))
+            with get_db() as db:
+                criteria = self.criteria_service.get_criteria_by_id(db, int(id))
 
-            if not criteria:
-                self.write_output("Nenhum critério encontrado para o usuário informado.")
-                return
+                if not criteria:
+                    self.write_output("Nenhum critério encontrado para o usuário informado.")
+                    return
 
-            self.write_output(f"ID: {criteria.id} | Nome: {criteria.name} | Descrição: {criteria.description} | ID do usuário: {criteria.user_id}")
+                self.write_output(f"ID: {criteria.id} | Nome: {criteria.name} | Descrição: {criteria.description} | ID do usuário: {criteria.user_id}")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
 
     def list_criteria_by_user_id(self):
         user_id = self.user_id_entry.get().strip()
@@ -131,52 +125,47 @@ class CriteriaTestView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Informe um ID.")
             return
 
-        db = SessionLocal()
         try:
-            criteria_list = self.criteria_service.list_criteria_by_user_id(db, int(user_id))
+            with get_db() as db:
+                criteria_list = self.criteria_service.list_criteria_by_user_id(db, int(user_id))
 
-            if not criteria_list:
-                self.write_output("Nenhum critério encontrado para o usuário informado.")
-                return
+                if not criteria_list:
+                    self.write_output("Nenhum critério encontrado para o usuário informado.")
+                    return
 
-            output = []
-            for criteria in criteria_list:
-                output.append(f"ID: {criteria.id} | Nome: {criteria.name} | Descrição: {criteria.description} | ID do usuário: {criteria.user_id}")
+                output = []
+                for criteria in criteria_list:
+                    output.append(f"ID: {criteria.id} | Nome: {criteria.name} | Descrição: {criteria.description} | ID do usuário: {criteria.user_id}")
 
-            self.write_output("\n".join(output))
+                self.write_output("\n".join(output))
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
 
     def update_criteria(self):
         criteria_id = self.id_entry.get().strip()
         new_name = self.name_entry.get().strip()
         new_description = self.description_entry.get().strip()
 
-
         if not criteria_id:
             messagebox.showerror("Erro", "Informe o ID para atualizar.")
             return
 
-        db = SessionLocal()
         try:
-            criteria = self.criteria_service.update_criteria(
-                db,
-                int(criteria_id),
-                new_name=new_name if new_name else None,
-                new_description=new_description if new_description else None
-            )
+            with get_db() as db:
+                criteria = self.criteria_service.update_criteria(
+                    db,
+                    int(criteria_id),
+                    new_name=new_name if new_name else None,
+                    new_description=new_description if new_description else None
+                )
 
-            if criteria is None:
-                self.write_output("Critério não encontrado.")
-                return
+                if criteria is None:
+                    self.write_output("Critério não encontrado.")
+                    return
 
-            self.write_output(f"Critério atualizado:\nID: {criteria.id}\nNome: {criteria.name}\nDescrição: {criteria.description}")
+                self.write_output(f"Critério atualizado:\nID: {criteria.id}\nNome: {criteria.name}\nDescrição: {criteria.description}")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
 
     def delete_criteria(self):
         criteria_id = self.id_entry.get().strip()
@@ -185,16 +174,14 @@ class CriteriaTestView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Informe o ID para deletar.")
             return
 
-        db = SessionLocal()
         try:
-            deleted = self.criteria_service.delete_criteria(db, int(criteria_id))
+            with get_db() as db:
+                deleted = self.criteria_service.delete_criteria(db, int(criteria_id))
 
-            if not deleted:
-                self.write_output("Critério não encontrado.")
-                return
+                if not deleted:
+                    self.write_output("Critério não encontrado.")
+                    return
 
-            self.write_output("Critério deletado com sucesso.")
+                self.write_output("Critério deletado com sucesso.")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()

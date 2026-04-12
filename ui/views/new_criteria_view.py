@@ -1,15 +1,15 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from services.criteria_service import CriteriaService
-from services.user_service import UserService
-from database import SessionLocal
+from database import get_db
 
 class NewCriteriaView(ctk.CTkFrame):
-    def __init__(self, parent, on_criteria_created, on_back, user_id):
+    def __init__(self, parent, on_criteria_created, on_back, user_id, criteria_id=None):
         super().__init__(parent)
         self.on_criteria_created = on_criteria_created
         self.on_back = on_back
         self.user_id = user_id
+        self.criteria_id = criteria_id
 
         self.criteria_service = CriteriaService()
         self.columnconfigure(0, weight=1)
@@ -26,7 +26,7 @@ class NewCriteriaView(ctk.CTkFrame):
 
         self.subtitle = ctk.CTkLabel(
             self,
-            text="Novo Critério",
+            text=self.get_subtitle(),
             font=ctk.CTkFont(size=26),
             justify="left"
         )
@@ -48,8 +48,8 @@ class NewCriteriaView(ctk.CTkFrame):
         # Botões
         self.create_button = ctk.CTkButton(
             self, 
-            text="Criar Critério", 
-            command=self.create_criteria, 
+            text=self.get_button_text(), 
+            command=self.save_criteria, 
             font=ctk.CTkFont(size=15),
             height=35
         )
@@ -63,10 +63,16 @@ class NewCriteriaView(ctk.CTkFrame):
         )
         self.back_button.grid(row=6, column=1, padx=20, pady=30, sticky="ew")
 
+    def get_subtitle(self):
+        return "Novo Critério"
+    
+    def get_button_text(self):
+        return "Criar Critério"
+
     def back(self):
         self.on_back()
 
-    def create_criteria(self):
+    def save_criteria(self):
         name = self.name_entry.get().strip()
         description = self.description_entry.get("0.0", "end").strip()
 
@@ -74,14 +80,12 @@ class NewCriteriaView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Preencha nome e descrição.")
             return
 
-        db = SessionLocal()
         try:
-            criteria = self.criteria_service.create_criteria(db, name, description, self.user_id)
-            if criteria:
-                self.on_criteria_created()
-            else:
-                messagebox.showerror("Erro", "Não foi possível criar o critério.")
+            with get_db() as db:
+                criteria = self.criteria_service.create_criteria(db, name, description, self.user_id)
+                if criteria:
+                    self.on_criteria_created()
+                else:
+                    messagebox.showerror("Erro", "Não foi possível criar o critério.")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()

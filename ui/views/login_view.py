@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from services.user_service import UserService
-from database import SessionLocal
+from database import get_db
 
 class LoginView(ctk.CTkFrame):
     def __init__(self, parent, on_authenticated, on_back):
@@ -59,6 +59,9 @@ class LoginView(ctk.CTkFrame):
         self.back_button.grid(row=7, column=1, padx=20, pady=10)
 
     def back(self):
+        self.email_entry.delete(0, "end")
+        self.password_entry.delete(0, "end")
+        self.focus()
         self.on_back()
 
     def _create_entry(self, placeholder, **kwargs):
@@ -94,14 +97,16 @@ class LoginView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Preencha email e senha.")
             return
 
-        db = SessionLocal()
         try:
-            user = self.user_service.authenticate_user(db, email, password)
-            if user:
-                self.on_authenticated(user)
-            else:
-                messagebox.showerror("Erro", "Email ou senha inválidos.")
+            with get_db() as db:
+                user = self.user_service.authenticate_user(db, email, password)
+                user = self.user_service.get_user_with_criteria(db, user.id)
+                if user:
+                    self.email_entry.delete(0, "end")
+                    self.password_entry.delete(0, "end")
+                    self.focus()
+                    self.on_authenticated(user)
+                else:
+                    messagebox.showerror("Erro", "Email ou senha inválidos.")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()

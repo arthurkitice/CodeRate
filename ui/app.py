@@ -5,6 +5,7 @@ from ui.views.register_view import RegisterView
 from ui.views.auth_selector_view import AuthSelectorView
 from ui.views.user_dashboard_view import DashboardView
 from ui.views.new_criteria_view import NewCriteriaView
+from ui.views.edit_criteria_view import EditCriteriaView
 
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("ui/color_theme.json")
@@ -23,8 +24,8 @@ class MainApp(ctk.CTkFrame):
             "auth_selector":
             AuthSelectorView(
                 self.container,
-                on_login=lambda: self.show_view("login"),
-                on_register=lambda: self.show_view("register")
+                on_logon=lambda: self.show_view("login"),
+                on_login=lambda: self.show_view("register")
             ),
             "login":
             LoginView(
@@ -38,8 +39,6 @@ class MainApp(ctk.CTkFrame):
                 on_registered=self.on_authenticated,
                 on_back=lambda: self.show_view("auth_selector")
             ),
-            
-
         }
 
         # Comece com a view inicial (ex.: auth selector)
@@ -58,6 +57,7 @@ class MainApp(ctk.CTkFrame):
                     self.container,
                     user=user,
                     on_criteria_create=lambda user_id: self.show_view("new_criteria", user_id=user_id),
+                    on_criteria_edit=lambda user_id, criteria_id: self.show_view("edit_criteria", user_id=user_id, criteria_id=criteria_id),
                     on_logout=lambda: self.show_view("auth_selector")
                 )
             if view_name == "new_criteria":
@@ -66,6 +66,16 @@ class MainApp(ctk.CTkFrame):
                     self.container,
                     on_criteria_created=self.go_to_dashboard,
                     on_back=self.go_to_dashboard,
+                    user_id=user_id
+                )
+            if view_name == "edit_criteria":
+                user_id = kwargs.get("user_id")
+                criteria_id = kwargs.get("criteria_id")
+                self.current_view = EditCriteriaView(
+                    self.container,
+                    on_criteria_updated=self.go_to_dashboard,
+                    on_back=self.go_to_dashboard,
+                    criteria_id=criteria_id,
                     user_id=user_id
                 )
             # ... adicione outras views aqui
@@ -78,14 +88,14 @@ class MainApp(ctk.CTkFrame):
     def refresh_current_user(self):
         """Recarrega o usuário atual do banco de dados"""
         if self.current_user:
-            from database import SessionLocal
-            db = SessionLocal()
+            from database import get_db
+            
             try:
-                user_service = UserService()
-                self.current_user = user_service.get_user_by_id(db, self.current_user.id)
-                _ = self.current_user.criteria
-            finally:
-                db.close()
+                with get_db() as db:
+                    user_service = UserService()
+                    self.current_user = user_service.get_user_with_criteria(db, self.current_user.id)
+            except Exception as e:
+                print(f"Erro: {e}")
 
     def go_to_dashboard(self):
         self.refresh_current_user()

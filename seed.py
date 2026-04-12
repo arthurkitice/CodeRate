@@ -1,5 +1,5 @@
 import os
-from database import SessionLocal, engine, Base
+from database import get_db, engine, Base
 from services.user_service import UserService
 from services.criteria_service import CriteriaService
 
@@ -15,19 +15,18 @@ if db_url.drivername == "sqlite":
 Base.metadata.create_all(bind=engine)
 print("Banco de dados recriado com sucesso!")
 
-db = SessionLocal()
 user_service = UserService()
 criteria_service = CriteriaService()
 
-
 try:
-    user_service.create_user(db, "Arthur", "arthur@gmail.com", "123")
-    user_service.create_user(db, "Maria", "maria@gmail.com", "456")
-    print("Usuários criados com sucesso!")
+    with get_db() as db:
+        user_service.create_user(db, "Arthur", "arthur@gmail.com", "123")
+        user_service.create_user(db, "Maria", "maria@gmail.com", "456")
+        print("Usuários criados com sucesso!")
 
-    criteria_service.create_criteria(db, "Critério de Avaliação 1", "Descrição detalhada do primeiro critério de avaliação.", 1)
-    criteria_service.create_criteria(db, "Critério de Avaliação 2", "Descrição detalhada do segundo critério de avaliação.", 1)
-    criteria_service.create_criteria(db, "Critério de Avaliação 3", "Descrição detalhada do terceiro critério de avaliação.", 2)
-    print("Critérios criados com sucesso!")
-finally:
-    db.close()
+        criteria_service.create_criteria(db, "Critério de Avaliação 1", "Descrição detalhada do primeiro critério de avaliação.", 1)
+        criteria_service.create_criteria(db, "Critério de Avaliação 2", "Descrição detalhada do segundo critério de avaliação.", 1)
+        criteria_service.create_criteria(db, "Critério de Avaliação 3", "Descrição detalhada do terceiro critério de avaliação.", 2)
+        print("Critérios criados com sucesso!")
+except Exception as e:
+    print(f"Erro ao popular banco: {e}")

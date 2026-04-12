@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 
-from database import SessionLocal
+from database import get_db
 from services.user_service import UserService
 
 
@@ -72,33 +72,29 @@ class UsersTestView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Preencha nome, email e senha.")
             return
 
-        db = SessionLocal()
         try:
-            user = self.user_service.create_user(db, name, email, password)
-            self.write_output(f"Usuário criado com sucesso:\nID: {user.id}\nNome: {user.name}\nEmail: {user.email}")
+            with get_db() as db:
+                user = self.user_service.create_user(db, name, email, password)
+                self.write_output(f"Usuário criado com sucesso:\nID: {user.id}\nNome: {user.name}\nEmail: {user.email}")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
 
     def list_users(self):
-        db = SessionLocal()
         try:
-            users = self.user_service.list_users(db)
+            with get_db() as db:
+                users = self.user_service.list_users(db)
 
-            if not users:
-                self.write_output("Nenhum usuário cadastrado.")
-                return
+                if not users:
+                    self.write_output("Nenhum usuário cadastrado.")
+                    return
 
-            output = []
-            for user in users:
-                output.append(f"ID: {user.id} | Nome: {user.name} | Email: {user.email} | Senha: {user.password}")
+                output = []
+                for user in users:
+                    output.append(f"ID: {user.id} | Nome: {user.name} | Email: {user.email} | Senha: {user.password}")
 
-            self.write_output("\n".join(output))
+                self.write_output("\n".join(output))
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
 
     def get_user_by_id(self):
         user_id = self.id_entry.get().strip()
@@ -107,19 +103,17 @@ class UsersTestView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Informe um ID.")
             return
 
-        db = SessionLocal()
         try:
-            user = self.user_service.get_user_by_id(db, int(user_id))
+            with get_db() as db:
+                user = self.user_service.get_user_by_id(db, int(user_id))
 
-            if user is None:
-                self.write_output("Usuário não encontrado.")
-                return
+                if user is None:
+                    self.write_output("Usuário não encontrado.")
+                    return
 
-            self.write_output(f"Usuário encontrado:\nID: {user.id}\nNome: {user.name}\nEmail: {user.email}")
+                self.write_output(f"Usuário encontrado:\nID: {user.id}\nNome: {user.name}\nEmail: {user.email}")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
 
     def update_user(self):
         user_id = self.id_entry.get().strip()
@@ -131,25 +125,23 @@ class UsersTestView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Informe o ID para atualizar.")
             return
 
-        db = SessionLocal()
         try:
-            user = self.user_service.update_user(
-                db,
-                int(user_id),
-                new_name=new_name if new_name else None,
-                new_email=new_email if new_email else None,
-                new_password=new_password if new_password else None
-            )
+            with get_db() as db:
+                user = self.user_service.update_user(
+                    db,
+                    int(user_id),
+                    new_name=new_name if new_name else None,
+                    new_email=new_email if new_email else None,
+                    new_password=new_password if new_password else None
+                )
 
-            if user is None:
-                self.write_output("Usuário não encontrado.")
-                return
+                if user is None:
+                    self.write_output("Usuário não encontrado.")
+                    return
 
-            self.write_output(f"Usuário atualizado:\nID: {user.id}\nNome: {user.name}\nEmail: {user.email}")
+                self.write_output(f"Usuário atualizado:\nID: {user.id}\nNome: {user.name}\nEmail: {user.email}")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
 
     def delete_user(self):
         user_id = self.id_entry.get().strip()
@@ -158,16 +150,14 @@ class UsersTestView(ctk.CTkFrame):
             messagebox.showerror("Erro", "Informe o ID para deletar.")
             return
 
-        db = SessionLocal()
         try:
-            deleted = self.user_service.delete_user(db, int(user_id))
+            with get_db() as db:
+                deleted = self.user_service.delete_user(db, int(user_id))
 
-            if not deleted:
-                self.write_output("Usuário não encontrado.")
-                return
+                if not deleted:
+                    self.write_output("Usuário não encontrado.")
+                    return
 
-            self.write_output("Usuário deletado com sucesso.")
+                self.write_output("Usuário deletado com sucesso.")
         except Exception as e:
             messagebox.showerror("Erro", str(e))
-        finally:
-            db.close()
