@@ -1,112 +1,74 @@
+# ui/views/login_view.py
 import customtkinter as ctk
-from tkinter import messagebox
 from services.user_service import UserService
 from database import get_db
+from ui.widgets import create_button, create_entry
+from ui.views.centered_form_view import CenteredFormView
 
-class LoginView(ctk.CTkFrame):
+class LoginView(CenteredFormView):
     def __init__(self, parent, on_authenticated, on_back):
-        super().__init__(parent)
         self.on_authenticated = on_authenticated
         self.on_back = on_back
         self.user_service = UserService()
+        super().__init__(parent)
+    
+    def build_ui(self):
+        """Constrói a UI do login"""
+        row = 1
         
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_columnconfigure(2, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(8, weight=1)
-
-        # Título
-        label = ctk.CTkLabel(
-            self,
-            text="CodeRate",
-            font=ctk.CTkFont(size=50),
-            justify="center"
-        )
-        label.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
-
-        label = ctk.CTkLabel(
-            self,
-            text="Fazer Login",
-            font=ctk.CTkFont(size=28),
-            justify="center"
-        )
-        label.grid(row=2, column=1, padx=20, pady=10, sticky="sew")
-
-        label = ctk.CTkLabel(
-            self,
-            text="Digite suas credenciais para acessar a conta",
-            font=ctk.CTkFont(size=18),
-            justify="center"
-        )
-        label.grid(row=3, column=1, padx=20, pady=10, sticky="new")
-
+        # Header
+        row = self.add_title(row)
+        row = self.add_heading(row, "Fazer Login")
+        row = self.add_description(row, "Digite suas credenciais para acessar a conta")
+        
         # Campos
-        self.email_entry = self._create_entry("Email@dominio.com")
-        self.email_entry.grid(row=4, column=1, padx=20, pady=10)
-
-        self.password_entry = self._create_entry("Senha", show="*")
-        self.password_entry.grid(row=5, column=1, padx=20, pady=10)
-
+        self.email_entry = create_entry(self, "Email@dominio.com")
+        self.email_entry.grid(row=row, column=1, padx=20, pady=10)
+        row += 1
+        
+        self.password_entry = create_entry(self, "Senha", show="*")
+        self.password_entry.grid(row=row, column=1, padx=20, pady=10)
+        row += 1
+        
+        # Bindings
         self.email_entry.bind("<Return>", lambda e: self.password_entry.focus())
         self.password_entry.bind("<Return>", lambda e: self.login())
         
         # Botões
-        self.login_button = self._create_button("Login", self.login)
-        self.login_button.grid(row=6, column=1, padx=20, pady=10)
-
-        self.back_button = self._create_button("Voltar", self.back)
-        self.back_button.grid(row=7, column=1, padx=20, pady=10)
-
+        self.login_button = create_button(self, "Login", self.login)
+        self.login_button.grid(row=row, column=1, padx=20, pady=10)
+        row += 1
+        
+        self.back_button = create_button(self, "Voltar", self.back)
+        self.back_button.grid(row=row, column=1, padx=20, pady=10)
+    
     def back(self):
-        self.email_entry.delete(0, "end")
-        self.password_entry.delete(0, "end")
-        self.focus()
+        """Limpa campos e volta"""
+        self.clear_fields(self.email_entry, self.password_entry)
         self.on_back()
-
-    def _create_entry(self, placeholder, **kwargs):
-        return ctk.CTkEntry(
-            self,
-            font=ctk.CTkFont(size=15),
-            width=350,
-            height=35,
-            placeholder_text=placeholder,
-            border_width=0,
-            fg_color="white",
-            text_color="black",
-            **kwargs
-        )
-
-    def _create_button(self, text, command):
-        return ctk.CTkButton(
-            self,
-            font=ctk.CTkFont(size=15),
-            width=350,
-            height=35,
-            text=text,
-            cursor="hand2",
-            command=command
-        )
-   
-
+    
     def login(self):
+        """Realiza login"""
         email = self.email_entry.get().strip()
         password = self.password_entry.get().strip()
-
+        
+        # Validação UX
         if not email or not password:
-            messagebox.showerror("Erro", "Preencha email e senha.")
+            self.show_error("Preencha email e senha.")
             return
-
+        
+        if "@" not in email:
+            self.show_error("Email inválido.")
+            return
+        
+        # Autentica
         try:
             with get_db() as db:
                 user = self.user_service.authenticate_user(db, email, password)
-                user = self.user_service.get_user_with_criteria(db, user.id)
-                if user:
-                    self.email_entry.delete(0, "end")
-                    self.password_entry.delete(0, "end")
-                    self.focus()
-                    self.on_authenticated(user)
-                else:
-                    messagebox.showerror("Erro", "Email ou senha inválidos.")
+                self.clear_fields(self.email_entry, self.password_entry)
+                self.focus()
+                self.on_authenticated(user)
+        except ValueError as e:
+            self.show_error(str(e))
         except Exception as e:
-            messagebox.showerror("Erro", str(e))
+            self.show_error(f"Erro inesperado: {str(e)}")

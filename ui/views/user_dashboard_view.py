@@ -1,25 +1,20 @@
 import customtkinter as ctk
-from tkinter import messagebox
 from services.user_service import UserService
 from services.criteria_service import CriteriaService
 from ui.views.new_criteria_view import NewCriteriaView
+from ui.views.dashboard_form_view import DashboardFormView
 from database import get_db
-from PIL import Image
+from ui.widgets import create_criterion_button, create_edit_button, create_remove_button
 
-
-edit_icon = ctk.CTkImage(dark_image=Image.open("ui/icons/edit_icon.png"), size=(30, 30))
-trash_icon = ctk.CTkImage(dark_image=Image.open("ui/icons/trash_icon.png"), size=(30, 30))
-
-class DashboardView(ctk.CTkFrame):
+class DashboardView(DashboardFormView):
     def __init__(self, parent, user, on_criteria_create, on_criteria_edit, on_logout):
-        super().__init__(parent)
         self.user_service = UserService()
         self.criteria_service = CriteriaService()
         self.user = user
         self.on_criteria_create = on_criteria_create
         self.on_criteria_edit = on_criteria_edit
         self.on_logout = on_logout
-        self.show_dashboard()
+        super().__init__(parent)
 
     def _gen_criteria_list(self):
         try:
@@ -27,14 +22,10 @@ class DashboardView(ctk.CTkFrame):
                 criteria = self.criteria_service.list_criteria_by_user_id(db, self.user.id)
                 return list(reversed(criteria[-4:]))
         except Exception as e:
-            messagebox.showerror("Erro", str(e))
+            self.show_error(f"Erro inesperado: {str(e)}")
 
     def logout(self):
         self.on_logout()
-
-    def clear_content(self):
-        for widget in self.winfo_children():
-            widget.destroy()
 
     def create_criteria(self):
         user_id = self.user.id
@@ -45,43 +36,15 @@ class DashboardView(ctk.CTkFrame):
             with get_db() as db:
                 self.criteria_service.delete_criteria(db, criteria_id)
         except Exception as e:
-            messagebox.showerror("Erro", str(e))
+            self.show_error(f"Erro inesperado: {str(e)}")
 
         self._gen_criteria_buttons()
 
-    def show_dashboard(self, *args):
-        self.clear_content()
-        self.build_ui()
-
     def build_ui(self):
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(1, weight=0)
-
         # Título
-        self.label = ctk.CTkLabel(
-            self,
-            text="CodeRate",
-            font=ctk.CTkFont(size=38, weight="bold"),
-            justify="left"
-        )
-        self.label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
-
-        self.label = ctk.CTkLabel(
-            self,
-            text=f"{self.user.name}",
-            font=ctk.CTkFont(size=26, weight="bold"),
-            justify="left"
-        )
-        self.label.grid(row=0, column=2, padx=20, pady=20, sticky="w")
-
-        # Subtítulo (opcional)
-        self.subtitle = ctk.CTkLabel(
-            self,
-            text="\nCritérios de Avaliação",
-            font=ctk.CTkFont(size=26),
-            justify="left"
-        )
-        self.subtitle.grid(row=2, column=0, padx=20, pady=(0, 20), sticky="n")
+        self.add_title()
+        self.add_heading("Critérios de Avaliação")
+        self.add_username(self.user.name)
 
         # Botão
         self.logout_button = ctk.CTkButton(self, text="Encerrar Sessão", command=self.logout)
@@ -91,56 +54,6 @@ class DashboardView(ctk.CTkFrame):
         self.create_criteria_button.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
 
         self._gen_criteria_buttons()
-
-    def create_criterion_button(self, frame, criterion):
-        truncated_name = criterion.name[:30] + '...' if len(criterion.name) > 30 else criterion.name
-        criterion_button = ctk.CTkButton(
-                                frame,
-                                text=truncated_name,
-                                command=lambda c=criterion: self.start_evaluation(c.id),
-                                border_width=0,
-                                corner_radius=30,
-                                cursor="hand2",
-                                font=ctk.CTkFont(size=12),
-                                anchor="center",
-                                height=200,
-                                width=400
-                            )
-        return criterion_button
-    
-    def create_edit_button(self, frame, criterion):
-        normal_color = "#212435"
-        edit_button = ctk.CTkButton(
-                        frame,
-                        image=edit_icon,
-                        text="",
-                        fg_color=normal_color,
-                        bg_color=normal_color,  # Cor normal
-                        border_width=0,
-                        cursor="hand2",
-                        corner_radius=100,
-                        command=lambda c=criterion: self.on_criteria_edit(self.user.id, c.id),
-                        width=15,
-                        height=15
-                    )
-        return edit_button
-    
-    def create_remove_button(self, frame, criterion):
-        normal_color = "#212435"
-        remove_button = ctk.CTkButton(
-                            frame,
-                            image=trash_icon,
-                            text="",
-                            fg_color=normal_color,
-                            bg_color=normal_color,  # Mesma cor normal
-                            border_width=0,
-                            cursor="hand2",
-                            corner_radius=100,
-                            command=lambda c_id=criterion.id: self.delete_criteria(c_id),
-                            width=15,
-                            height=15
-                        )
-        return remove_button
 
     def _on_criterion_hover_enter(self, edit_btn, remove_btn):
         """Quando mouse entra no critério"""
@@ -171,15 +84,14 @@ class DashboardView(ctk.CTkFrame):
 
         for i, criterion in enumerate(criteria_list):
             # Botão principal
-            criterion_button = self.create_criterion_button(frame=self.criteria_frame, criterion=criterion)
+            criterion_button = create_criterion_button(self, frame=self.criteria_frame, criterion=criterion)
             criterion_button.grid(row=1, column=i, rowspan=3, padx=10, pady=5, sticky="we")
             
-
             # Botões pequenos
-            edit_button = self.create_edit_button(frame=self.criteria_frame, criterion=criterion)
+            edit_button = create_edit_button(self, frame=self.criteria_frame, criterion=criterion)
             edit_button.place(in_=criterion_button, relx=0.85, rely=0.1, anchor="ne")
             
-            remove_button = self.create_remove_button(frame=self.criteria_frame, criterion=criterion)
+            remove_button = create_remove_button(self, frame=self.criteria_frame, criterion=criterion)
             remove_button.place(in_=criterion_button, relx=0.97, rely=0.1, anchor="ne")
 
             # Sincroniza o hover: quando o mouse entra/sai do criterion_button, muda os pequenos

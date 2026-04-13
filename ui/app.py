@@ -24,8 +24,8 @@ class MainApp(ctk.CTkFrame):
             "auth_selector":
             AuthSelectorView(
                 self.container,
-                on_logon=lambda: self.show_view("login"),
-                on_login=lambda: self.show_view("register")
+                on_login=lambda: self.show_view("login"),
+                on_register=lambda: self.show_view("register")
             ),
             "login":
             LoginView(

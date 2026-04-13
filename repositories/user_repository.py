@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from models import User
 
 class UserRepository:
@@ -17,6 +17,9 @@ class UserRepository:
     def get_by_id(self, db: Session, user_id: int) -> User | None:
         return db.query(User).filter(User.id == user_id).first()
 
+    def get_user_with_criteria(self, db: Session, user_id: int) -> User | None:
+        return db.query(User).options(joinedload(User.criteria)).filter(User.id == user_id).first()
+        
     def update(self, db: Session, new_user: User) -> User | None:
         db.commit()
         db.refresh(new_user)

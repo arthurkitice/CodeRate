@@ -2,66 +2,68 @@ import customtkinter as ctk
 from tkinter import messagebox
 from services.criteria_service import CriteriaService
 from database import get_db
+from ui.views.dashboard_form_view import DashboardFormView
 
-class NewCriteriaView(ctk.CTkFrame):
+class NewCriteriaView(DashboardFormView):
     def __init__(self, parent, on_criteria_created, on_back, user_id, criteria_id=None):
-        super().__init__(parent)
         self.on_criteria_created = on_criteria_created
         self.on_back = on_back
         self.user_id = user_id
         self.criteria_id = criteria_id
-
         self.criteria_service = CriteriaService()
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
+        super().__init__(parent)
 
-        # Título
-        self.label = ctk.CTkLabel(
-            self,
-            text="CodeRate",
-            font=ctk.CTkFont(size=38, weight="bold"),
-            justify="left"
-        )
-        self.label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
+    def build_ui(self):
+        self.add_title()
+        self.add_heading(self.get_subtitle(), row=1, column=1)
 
-        self.subtitle = ctk.CTkLabel(
-            self,
-            text=self.get_subtitle(),
-            font=ctk.CTkFont(size=26),
-            justify="left"
-        )
-        self.subtitle.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="w")
+        self.grid_columnconfigure(0, weight=1, uniform="main")
+        self.grid_columnconfigure(1, weight=3, uniform="main")
+        self.grid_columnconfigure(2, weight=1, uniform="main")
+        self.grid_rowconfigure(3, weight=1)
+        self.grid_rowconfigure(99, weight=1)
+
+        self.content_frame = ctk.CTkFrame(self)
+        self.content_frame.grid(row=3, column=1, sticky="nsew")
+        self.content_frame.grid_columnconfigure((0, 1), weight=1)
+        self.content_frame.grid_rowconfigure(3, weight=1)
 
         # Campos
-        label = ctk.CTkLabel(self, text="Nome", font=ctk.CTkFont(size=18))
-        label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
+        row = 0
+        self.label = ctk.CTkLabel(self.content_frame, text="Nome", font=ctk.CTkFont(size=18))
+        self.label.grid(row=row, column=0, padx=20, pady=10, sticky="w")
+        row+=1
 
-        self.name_entry = ctk.CTkEntry(self, height=40)
-        self.name_entry.grid(row=3, column=0, columnspan=2, padx=20, pady=(0, 10), sticky="ew")
+        self.name_entry = ctk.CTkEntry(self.content_frame, height=40)
+        self.name_entry.grid(row=row, column=0, columnspan=2, padx=20, pady=(0, 10), sticky="ew")
+        row+=1
 
-        label = ctk.CTkLabel(self, text="Descrição", font=ctk.CTkFont(size=18))
-        label.grid(row=4, column=0, padx=20, pady=10, sticky="w")
+        self.label = ctk.CTkLabel(self.content_frame, text="Descrição", font=ctk.CTkFont(size=18))
+        self.label.grid(row=row, column=0, padx=20, pady=10, sticky="w")
+        row+=1
 
-        self.description_entry = ctk.CTkTextbox(self, height=400, border_width=2)
-        self.description_entry.grid(row=5, column=0, columnspan=2, padx=20, pady=(0, 10), sticky="nsew")
-        
+        self.description_entry = ctk.CTkTextbox(self.content_frame, border_width=2)
+        self.description_entry.grid(row=row, column=0, columnspan=2, padx=20, pady=(0, 10), sticky="nsew")
+        row+=1
+
         # Botões
         self.create_button = ctk.CTkButton(
-            self, 
+            self.content_frame, 
             text=self.get_button_text(), 
             command=self.save_criteria, 
             font=ctk.CTkFont(size=15),
             height=35
         )
-        self.create_button.grid(row=6, column=0, padx=20, pady=30, sticky="ew")
+        self.create_button.grid(row=row, column=0, padx=20, pady=30, sticky="ew")
 
-        self.back_button = ctk.CTkButton(self, 
+        self.back_button = ctk.CTkButton(
+            self.content_frame, 
             text="Voltar", 
             command=self.back, 
             font=ctk.CTkFont(size=15), 
             height=35
         )
-        self.back_button.grid(row=6, column=1, padx=20, pady=30, sticky="ew")
+        self.back_button.grid(row=row, column=1, padx=20, pady=30, sticky="ew")
 
     def get_subtitle(self):
         return "Novo Critério"
@@ -77,7 +79,7 @@ class NewCriteriaView(ctk.CTkFrame):
         description = self.description_entry.get("0.0", "end").strip()
 
         if not name or not description:
-            messagebox.showerror("Erro", "Preencha nome e descrição.")
+            self.show_error("Erro: Preencha nome e descrição.")
             return
 
         try:

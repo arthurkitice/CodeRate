@@ -1,118 +1,80 @@
+# ui/views/register_view.py
 import customtkinter as ctk
-from tkinter import messagebox
 from services.user_service import UserService
 from database import get_db
+from ui.widgets import create_button, create_entry
+from ui.views.centered_form_view import CenteredFormView
 
-class RegisterView(ctk.CTkFrame):
+class RegisterView(CenteredFormView):
     def __init__(self, parent, on_registered, on_back):
-        super().__init__(parent)
         self.on_registered = on_registered
         self.on_back = on_back
         self.user_service = UserService()
-
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_columnconfigure(2, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(9, weight=1)
-
-        # Título
-        label = ctk.CTkLabel(
-            self,
-            text="CodeRate",
-            font=ctk.CTkFont(size=50),
-            justify="center"
-        )
-        label.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
-
-        label = ctk.CTkLabel(
-            self,
-            text="Criar conta",
-            font=ctk.CTkFont(size=28),
-            justify="center"
-        )
-        label.grid(row=2, column=1, padx=20, pady=10, sticky="sew")
-
-        label = ctk.CTkLabel(
-            self,
-            text="Crie sua conta e comece a avaliar seus códigos",
-            font=ctk.CTkFont(size=18),
-            justify="center"
-        )
-        label.grid(row=3, column=1, padx=20, pady=10, sticky="new")
-
+        super().__init__(parent)
+    
+    def build_ui(self):
+        """Constrói a UI do registro"""
+        row = 1
+        
+        # Header
+        row = self.add_title(row)
+        row = self.add_heading(row, "Criar conta")
+        row = self.add_description(row, "Crie sua conta e comece a avaliar seus códigos")
+        
         # Campos
-        self.name_entry = self._create_entry("Nome de usuário")
-        self.name_entry.grid(row=4, column=1, padx=20, pady=10)
-
-        self.email_entry = self._create_entry("Email@dominio.com")
-        self.email_entry.grid(row=5, column=1, padx=20, pady=10)
-
-        self.password_entry = self._create_entry("Senha", show="*")
-        self.password_entry.grid(row=6, column=1, padx=20, pady=10)
-
+        self.name_entry = create_entry(self, "Nome de usuário")
+        self.name_entry.grid(row=row, column=1, padx=20, pady=10)
+        row += 1
+        
+        self.email_entry = create_entry(self, "Email@dominio.com")
+        self.email_entry.grid(row=row, column=1, padx=20, pady=10)
+        row += 1
+        
+        self.password_entry = create_entry(self, "Senha", show="*")
+        self.password_entry.grid(row=row, column=1, padx=20, pady=10)
+        row += 1
+        
+        # Bindings
         self.name_entry.bind("<Return>", lambda e: self.email_entry.focus())
         self.email_entry.bind("<Return>", lambda e: self.password_entry.focus())
         self.password_entry.bind("<Return>", lambda e: self.register())
-
+        
         # Botões
-        self.register_button = self._create_button("Cadastrar", self.register)
-        self.register_button.grid(row=7, column=1, padx=20, pady=10)
-
-        self.back_button = self._create_button("Voltar", self.back)
-        self.back_button.grid(row=8, column=1, padx=20, pady=10)
-
-    def _create_entry(self, placeholder, **kwargs):
-        return ctk.CTkEntry(
-            self,
-            font=ctk.CTkFont(size=15),
-            width=350,
-            height=35,
-            placeholder_text=placeholder,
-            border_width=0,
-            fg_color="white",
-            text_color="black",
-            **kwargs
-        )
-
-    def _create_button(self, text, command):
-        return ctk.CTkButton(
-            self,
-            font=ctk.CTkFont(size=15),
-            width=350,
-            height=35,
-            text=text,
-            cursor="hand2",
-            command=command
-        )
+        self.register_button = create_button(self, "Cadastrar", self.register)
+        self.register_button.grid(row=row, column=1, padx=20, pady=10)
+        row += 1
+        
+        self.back_button = create_button(self, "Voltar", self.back)
+        self.back_button.grid(row=row, column=1, padx=20, pady=10)
     
     def back(self):
-        self.name_entry.delete(0, "end")
-        self.email_entry.delete(0, "end")
-        self.password_entry.delete(0, "end")
-        self.focus()
+        """Limpa campos e volta"""
+        self.clear_fields(self.name_entry, self.email_entry, self.password_entry)
         self.on_back()
-
+    
     def register(self):
+        """Realiza registro"""
         name = self.name_entry.get().strip()
         email = self.email_entry.get().strip()
         password = self.password_entry.get().strip()
-
+        
+        # Validação UX
         if not name or not email or not password:
-            messagebox.showerror("Erro", "Preencha nome, email e senha.")
+            self.show_error("Preencha todos os campos.")
             return
-
-        if len(name) > 25:
-            messagebox.showerror("Erro", "Nome de usuário muito grande (Máx. 25 caractéres).")
+        
+        if "@" not in email:
+            self.show_error("Email inválido.")
             return
-
+        
+        # Registra
         try:
             with get_db() as db:
                 user = self.user_service.create_user(db, name, email, password)
-                self.name_entry.delete(0, "end")
-                self.email_entry.delete(0, "end")
-                self.password_entry.delete(0, "end")
+                self.clear_fields(self.name_entry, self.email_entry, self.password_entry)
                 self.focus()
                 self.on_registered(user)
+        except ValueError as e:
+            self.show_error(str(e))
         except Exception as e:
-            messagebox.showerror("Erro", str(e))
+            self.show_error(f"Erro inesperado: {str(e)}")

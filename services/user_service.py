@@ -80,7 +80,7 @@ class UserService:
         return UserDTO(id = user.id, name=user.name, email=user.email)
 
     def get_user_with_criteria(self, db: Session, user_id: int) -> UserWithCriteriaDTO | None:
-        user = self.repository.get_by_id(db, user_id)
+        user = self.repository.get_user_with_criteria(db, user_id)
 
         if user is None:
             return None
