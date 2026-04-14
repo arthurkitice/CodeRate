@@ -45,36 +45,57 @@ def create_criterion_button(parent, frame, criterion):
         )
         return criterion_button
 
-def create_remove_button(parent, frame, criterion):
-        normal_color = "#212435"
-        remove_button = ctk.CTkButton(
-            frame,
-            image=trash_icon,
-            text="",
-            fg_color=normal_color,
-            bg_color=normal_color,  # Mesma cor normal
-            border_width=0,
-            cursor="hand2",
-            corner_radius=100,
-            command=lambda c_id=criterion.id: parent.delete_criteria(c_id),
-            width=15,
-            height=15
-        )
-        return remove_button
+def create_remove_button(parent, frame, criterion, no_bg_color=True):
+    normal_color = "#212435"
+    remove_button = ctk.CTkButton(
+        frame,
+        image=trash_icon,
+        text="",
+        fg_color=normal_color,
+        border_width=0,
+        cursor="hand2",
+        corner_radius=100,
+        command=lambda c_id=criterion.id: parent.delete_criteria(c_id),
+        width=15,
+        height=15
+    )
     
-def create_edit_button(parent, frame, criterion):
+    if no_bg_color:
+        remove_button.configure(bg_color=normal_color)
+
+    return remove_button
+
+def create_edit_button(parent, frame, criterion, no_bg_color=True):
     normal_color = "#212435"
     edit_button = ctk.CTkButton(
         frame,
         image=edit_icon,
         text="",
         fg_color=normal_color,
-        bg_color=normal_color,  # Cor normal
         border_width=0,
         cursor="hand2",
         corner_radius=100,
-        command=lambda c=criterion: parent.on_criteria_edit(parent.user.id, c.id),
+        command=lambda c_id=criterion.id: parent.edit_criteria(c_id),
         width=15,
         height=15
     )
+
+    if no_bg_color:
+        edit_button.configure(bg_color=normal_color)
+
     return edit_button
+
+def create_small_criterion_button(frame, criterion, command, max_name_len=50):
+    truncated_name = criterion.name[:max_name_len] + '...' if len(criterion.name) > max_name_len else criterion.name
+    criterion_button = ctk.CTkButton(
+        frame,
+        text=truncated_name,
+        command=command,
+        border_width=0,
+        corner_radius=10,
+        cursor="hand2",
+        font=ctk.CTkFont(size=12),
+        anchor="w",
+        height=40,
+    )
+    return criterion_button

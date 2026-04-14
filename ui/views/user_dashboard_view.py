@@ -7,12 +7,13 @@ from database import get_db
 from ui.widgets import create_criterion_button, create_edit_button, create_remove_button
 
 class DashboardView(DashboardFormView):
-    def __init__(self, parent, user, on_criteria_create, on_criteria_edit, on_logout):
+    def __init__(self, parent, user, on_criteria_create, on_criteria_edit, on_all_criteria, on_logout):
         self.user_service = UserService()
         self.criteria_service = CriteriaService()
         self.user = user
         self.on_criteria_create = on_criteria_create
         self.on_criteria_edit = on_criteria_edit
+        self.on_all_criteria = on_all_criteria
         self.on_logout = on_logout
         super().__init__(parent)
 
@@ -40,6 +41,9 @@ class DashboardView(DashboardFormView):
 
         self._gen_criteria_buttons()
 
+    def edit_criteria(self, criteria_id):
+        self.on_criteria_edit(criteria_id=criteria_id, user_id=self.user.id)
+
     def build_ui(self):
         # Título
         self.add_title()
@@ -50,8 +54,14 @@ class DashboardView(DashboardFormView):
         self.logout_button = ctk.CTkButton(self, text="Encerrar Sessão", command=self.logout)
         self.logout_button.grid(row=0, column=3, padx=20, pady=10, sticky="ew")
 
-        self.create_criteria_button = ctk.CTkButton(self, text="Criar Critério", command=self.create_criteria)
+        self.button_frame = ctk.CTkFrame(self)
+        self.button_frame.grid(row=1, column=0)
+
+        self.create_criteria_button = ctk.CTkButton(self.button_frame, text="Criar Critério", command=self.create_criteria)
         self.create_criteria_button.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
+
+        self.create_criteria_button = ctk.CTkButton(self.button_frame, text="Todos os Critérios", command= lambda: self.on_all_criteria(self.user.id))
+        self.create_criteria_button.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
 
         self._gen_criteria_buttons()
 

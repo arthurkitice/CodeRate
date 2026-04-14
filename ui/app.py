@@ -6,6 +6,7 @@ from ui.views.auth_selector_view import AuthSelectorView
 from ui.views.user_dashboard_view import DashboardView
 from ui.views.new_criteria_view import NewCriteriaView
 from ui.views.edit_criteria_view import EditCriteriaView
+from ui.views.all_criteria_view import AllCriteriaView
 
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("ui/color_theme.json")
@@ -58,6 +59,7 @@ class MainApp(ctk.CTkFrame):
                     user=user,
                     on_criteria_create=lambda user_id: self.show_view("new_criteria", user_id=user_id),
                     on_criteria_edit=lambda user_id, criteria_id: self.show_view("edit_criteria", user_id=user_id, criteria_id=criteria_id),
+                    on_all_criteria=lambda user_id: self.show_view("all_criteria", user_id=user_id),
                     on_logout=lambda: self.show_view("auth_selector")
                 )
             if view_name == "new_criteria":
@@ -71,12 +73,25 @@ class MainApp(ctk.CTkFrame):
             if view_name == "edit_criteria":
                 user_id = kwargs.get("user_id")
                 criteria_id = kwargs.get("criteria_id")
+                all_criteria = kwargs.get("all_criteria")
+
+                command = self.go_to_dashboard if not all_criteria else self.go_to_all_criteria
+        
                 self.current_view = EditCriteriaView(
                     self.container,
-                    on_criteria_updated=self.go_to_dashboard,
-                    on_back=self.go_to_dashboard,
+                    on_criteria_updated=command,
+                    on_back=command,
                     criteria_id=criteria_id,
                     user_id=user_id
+                )
+            if view_name == "all_criteria":
+                user_id = kwargs.get("user_id")
+                self.current_view = AllCriteriaView(
+                    self.container,
+                    user_id=user_id,
+                    on_criteria_create=lambda user_id: self.show_view("new_criteria", user_id=user_id),
+                    on_criteria_edit=lambda user_id, criteria_id: self.show_view("edit_criteria", user_id=user_id, criteria_id=criteria_id, all_criteria=True),
+                    on_back=self.go_to_dashboard
                 )
             # ... adicione outras views aqui
         else:
@@ -100,6 +115,10 @@ class MainApp(ctk.CTkFrame):
     def go_to_dashboard(self):
         self.refresh_current_user()
         self.show_view("dashboard", user=self.current_user)
+
+    def go_to_all_criteria(self):
+        self.refresh_current_user()
+        self.show_view("all_criteria", user_id=self.current_user.id)
 
     def on_authenticated(self, user):
         self.show_view("dashboard", user=user)
