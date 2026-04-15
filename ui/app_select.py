@@ -52,6 +52,8 @@ class App(ctk.CTk):
 
         self.current_view = frame
 
+        self.show_main_app()
+
     def show_main_app(self):
         self.clear_current_view()
         self.current_view = MainApp(self)
