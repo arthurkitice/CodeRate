@@ -45,10 +45,11 @@ class DashboardView(DashboardFormView):
         self.on_criteria_edit(criteria_id=criteria_id, user_id=self.user.id)
 
     def build_ui(self):
+        self.grid_columnconfigure(1, weight=1)
         # Título
-        self.add_title()
-        self.add_heading("Critérios de Avaliação")
-        self.add_username(self.user.name)
+        self.add_title(self)
+        self.add_heading(self, "Critérios de Avaliação")
+        self.add_username(self, self.user.name)
 
         # Botão
         self.logout_button = ctk.CTkButton(self, text="Encerrar Sessão", command=self.logout)

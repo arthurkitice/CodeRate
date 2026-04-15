@@ -13,8 +13,8 @@ class NewCriteriaView(DashboardFormView):
         super().__init__(parent)
 
     def build_ui(self):
-        self.add_title(row=1, column=1)
-        self.add_heading(self.get_subtitle(), row=2, column=1)
+        self.add_title(self, row=1, column=1)
+        self.add_heading(self, self.get_subtitle(), row=2, column=1)
 
         self.grid_columnconfigure(0, weight=1, uniform="main")
         self.grid_columnconfigure(1, weight=2, uniform="main")

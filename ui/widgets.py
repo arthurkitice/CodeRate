@@ -4,6 +4,8 @@ from PIL import Image
 edit_icon = ctk.CTkImage(dark_image=Image.open("ui/icons/edit_icon.png"), size=(30, 30))
 trash_icon = ctk.CTkImage(dark_image=Image.open("ui/icons/trash_icon.png"), size=(30, 30))
 
+NORMAL_COLOR = "#212435"
+
 def create_entry(parent, placeholder, **kwargs):
         return ctk.CTkEntry(
             parent,
@@ -46,12 +48,11 @@ def create_criterion_button(parent, frame, criterion):
         return criterion_button
 
 def create_remove_button(parent, frame, criterion, no_bg_color=True):
-    normal_color = "#212435"
     remove_button = ctk.CTkButton(
         frame,
         image=trash_icon,
         text="",
-        fg_color=normal_color,
+        fg_color=NORMAL_COLOR,
         border_width=0,
         cursor="hand2",
         corner_radius=100,
@@ -61,17 +62,17 @@ def create_remove_button(parent, frame, criterion, no_bg_color=True):
     )
     
     if no_bg_color:
-        remove_button.configure(bg_color=normal_color)
+        remove_button.configure(bg_color=NORMAL_COLOR)
 
     return remove_button
 
 def create_edit_button(parent, frame, criterion, no_bg_color=True):
-    normal_color = "#212435"
+    NORMAL_COLOR = "#212435"
     edit_button = ctk.CTkButton(
         frame,
         image=edit_icon,
         text="",
-        fg_color=normal_color,
+        fg_color=NORMAL_COLOR,
         border_width=0,
         cursor="hand2",
         corner_radius=100,
@@ -81,7 +82,7 @@ def create_edit_button(parent, frame, criterion, no_bg_color=True):
     )
 
     if no_bg_color:
-        edit_button.configure(bg_color=normal_color)
+        edit_button.configure(bg_color=NORMAL_COLOR)
 
     return edit_button
 
