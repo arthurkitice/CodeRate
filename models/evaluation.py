@@ -1,27 +1,25 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
+from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
 
-class Submissions(Base):
-    __tablename__ = "submissions"
+class Evaluation(Base):
+    __tablename__ = "evaluations"
 
     id = Column(Integer, primary_key=True)
-    evaluation_id = Column(Integer, ForeignKey("evaluations.id"))
-    
-    file_name = Column(String)
-    file_path = Column(String)
-    
-    date = Column(DateTime, default=datetime.timezone.utc)
-    
-    score = Column(Float)
-    feedback = Column(Text)
+    criteria_id = Column(Integer, ForeignKey("criteria.id"))
 
-    evaluation = relationship("Evaluation", back_populates="submissions")
+    date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    
+    submission_amount = Column(Integer)
+
+    avg_score = Column(Float)
+
+    evaluation = relationship("Submission", back_populates="evaluation")
 
     def __repr__(self):
         return (
-            f"Submission(id={self.id}, evaluation_id={self.evaluation_id}, "
-            f"file_name='{self.file_name}', file_path='{self.file_path}', "
-            f"date='{self.date}', score={self.score}, feedback='{self.feedback}')"
+            f"Evaluation(id={self.id}, criteria_id={self.criteria_id}, "
+            f"date='{self.date}', avg_score={self.avg_score}, submission_ammount='{self.submission_amount}')"
         )
