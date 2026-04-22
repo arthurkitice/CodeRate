@@ -1,14 +1,13 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime, Text
 from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
-from datetime import datetime
 from database import Base
 
 class Evaluation(Base):
     __tablename__ = "evaluations"
 
     id = Column(Integer, primary_key=True)
-    criteria_id = Column(Integer, ForeignKey("criteria.id"))
+    criteria_id = Column(Integer, ForeignKey("criteria.id", ondelete="CASCADE"))
 
     date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     
@@ -16,10 +15,17 @@ class Evaluation(Base):
 
     avg_score = Column(Float)
 
-    evaluation = relationship("Submission", back_populates="evaluation")
+    criteria = relationship("Criteria", back_populates="evaluations")
+
+    submissions = relationship(
+        "Submission", 
+        back_populates="evaluation", 
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
 
     def __repr__(self):
         return (
             f"Evaluation(id={self.id}, criteria_id={self.criteria_id}, "
-            f"date='{self.date}', avg_score={self.avg_score}, submission_ammount='{self.submission_amount}')"
+            f"date='{self.date}', avg_score={self.avg_score}, submission_amount='{self.submission_amount}')"
         )

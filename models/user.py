@@ -10,7 +10,12 @@ class User(Base):
     email = Column(String)
     password = Column(String)
 
-    criteria = relationship("Criteria", back_populates="user")
+    criteria = relationship(
+        "Criteria", 
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
 
     def __repr__(self):
         return f"User(id={self.id}, name='{self.name}', email='{self.email}', password='{self.password}')"

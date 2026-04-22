@@ -1,14 +1,13 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
 from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
-from datetime import datetime
 from database import Base
 
 class Submission(Base):
     __tablename__ = "submissions"
 
     id = Column(Integer, primary_key=True)
-    evaluation_id = Column(Integer, ForeignKey("evaluations.id"))
+    evaluation_id = Column(Integer, ForeignKey("evaluations.id", ondelete="CASCADE"))
     
     file_name = Column(String)
     file_path = Column(String)
@@ -18,7 +17,7 @@ class Submission(Base):
     score = Column(Float)
     feedback = Column(Text)
 
-    evaluation = relationship("Evaluation", back_populates="submission")
+    evaluation = relationship("Evaluation", back_populates="submissions")
 
     def __repr__(self):
         return (
