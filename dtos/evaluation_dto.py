@@ -7,6 +7,7 @@ from dtos.submission_dto import SubmissionDTO
 class EvaluationDTO:
     id: int
     criteria_id: int
+    name: str
     date: datetime
     submission_amount: int
     avg_score: float
@@ -15,6 +16,7 @@ class EvaluationDTO:
 class EvaluationWithSubmissionsDTO:
     id: int
     criteria_id: int
+    name: str
     date: datetime
     submission_amount: int
     avg_score: float

@@ -1,2 +1,4 @@
-from .criteria_repository import CriteriaRepository
 from .user_repository import UserRepository
+from .criteria_repository import CriteriaRepository
+from .evaluation_repository import EvaluationRepository
+from .submission_repository import SubmissionRepository

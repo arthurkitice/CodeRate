@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from services.criteria_service import CriteriaService
+from services import CriteriaService
 from database import get_db
 from ui.views.dashboard_form_view import DashboardFormView
 

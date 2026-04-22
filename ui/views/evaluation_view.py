@@ -1,26 +1,24 @@
 from database import get_db
 import customtkinter as ctk
-from services.user_service import UserService
-from services.criteria_service import CriteriaService
+from services import EvaluationService
 from ui.views.dashboard_form_view import DashboardFormView
 from ui.widgets import create_small_criterion_button as criteria_button
 from ui.widgets import create_edit_button, create_remove_button, NORMAL_COLOR
 
 class EvaluationView(DashboardFormView):
-    def __init__(self, parent, user_id, on_criteria_create, on_criteria_edit, on_back):
-        self.user_service = UserService()
-        self.criteria_service = CriteriaService()
-        self.user_id = user_id
+    def __init__(self, parent, criteria_id, on_criteria_create, on_criteria_edit, on_back):
+        self.evaluation_service = EvaluationService()
+        self.criteria_id = criteria_id
         self.on_criteria_create = on_criteria_create
         self.on_criteria_edit = on_criteria_edit
         self.on_back = on_back
         super().__init__(parent)
 
-    def _list_all_criteria(self): #IMPLEMENTAR LISTAGEM DE AVALIAÇÕES AQUI
+    def _list_all_evaluations(self):
         try:
             with get_db() as db:
-                criteria = self.criteria_service.list_criteria_by_user_id(db, self.user_id)
-                return list(reversed(criteria))
+                evaluation = self.evaluation_service.list_evaluations_by_criteria(db, self.criteria_id)
+                return list(reversed(evaluation))
         except Exception as e:
             self.show_error(f"Erro inesperado: {str(e)}")
 

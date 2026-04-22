@@ -1,5 +1,5 @@
 # ui/views/login_view.py
-from services.user_service import UserService
+from services import UserService
 from database import get_db
 from ui.widgets import create_button
 from ui.views.centered_form_view import CenteredFormView

@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from services.user_service import UserService
+from services import UserService
 from ui.views.login_view import LoginView
 from ui.views.register_view import RegisterView
 from ui.views.auth_selector_view import AuthSelectorView

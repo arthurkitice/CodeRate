@@ -1,6 +1,4 @@
-# ui/views/register_view.py
-import customtkinter as ctk
-from services.user_service import UserService
+from services import UserService
 from database import get_db
 from ui.widgets import create_button, create_entry
 from ui.views.centered_form_view import CenteredFormView

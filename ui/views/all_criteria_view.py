@@ -1,7 +1,6 @@
 from database import get_db
 import customtkinter as ctk
-from services.user_service import UserService
-from services.criteria_service import CriteriaService
+from services import UserService, CriteriaService
 from ui.views.dashboard_form_view import DashboardFormView
 from ui.widgets import create_small_criterion_button as criteria_button
 from ui.widgets import create_edit_button, create_remove_button, NORMAL_COLOR
