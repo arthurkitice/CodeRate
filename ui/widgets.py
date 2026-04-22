@@ -20,16 +20,20 @@ def create_entry(parent, placeholder, **kwargs):
         )
 
 def create_button(parent, text, command, **kwargs):
-    return ctk.CTkButton(
+    button = ctk.CTkButton(
         parent,
         font=ctk.CTkFont(size=15),
-        width=350,
-        height=35,
+        width=175,
+        height=40,
         text=text,
         cursor="hand2",
         command=command,
-        **kwargs
+        corner_radius=10
     )
+
+    button.configure(**kwargs)
+
+    return button
 
 def create_criterion_button(parent, frame, criterion):
         truncated_name = criterion.name[:30] + '...' if len(criterion.name) > 30 else criterion.name

@@ -3,7 +3,7 @@ import customtkinter as ctk
 from services import UserService, CriteriaService
 from ui.views.dashboard_form_view import DashboardFormView
 from ui.widgets import create_small_criterion_button as criteria_button
-from ui.widgets import create_edit_button, create_remove_button, NORMAL_COLOR
+from ui.widgets import create_edit_button, create_remove_button, create_button, NORMAL_COLOR
 
 class AllCriteriaView(DashboardFormView):
     def __init__(self, parent, user_id, on_criteria_create, on_criteria_edit, on_back):
@@ -65,19 +65,19 @@ class AllCriteriaView(DashboardFormView):
 
         r = 0
         self.name_label = ctk.CTkLabel(self.info_frame, text="Nome:", font=ctk.CTkFont(size=15), justify="left", text_color="gray")
-        self.name_label.grid(row=r, column=0, padx=10, pady=10, sticky="w")
+        self.name_label.grid(row=r, column=0, padx=20, pady=10, sticky="w")
         r+=1
 
         self.criteria_label = ctk.CTkLabel(self.info_frame, text=criteria.name, font=ctk.CTkFont(size=20), justify="left")
-        self.criteria_label.grid(row=r, column=0, padx=10, pady=0, sticky="w")
+        self.criteria_label.grid(row=r, column=0, padx=20, pady=0, sticky="w")
         r+=1
 
         self.description_label = ctk.CTkLabel(self.info_frame, text="Descrição:", font=ctk.CTkFont(size=15), justify="left", text_color="gray")
-        self.description_label.grid(row=r, column=0, padx=10, pady=(40, 10), sticky="w")
+        self.description_label.grid(row=r, column=0, padx=20, pady=(40, 10), sticky="w")
         r+=1
 
         self.criteria_desc_label = ctk.CTkLabel(self.info_frame, text=criteria.description, font=ctk.CTkFont(size=20), justify="left")
-        self.criteria_desc_label.grid(row=r, column=0, padx=10, pady=0, sticky="w")
+        self.criteria_desc_label.grid(row=r, column=0, padx=20, pady=0, sticky="w")
         r+=1
 
 
@@ -105,5 +105,5 @@ class AllCriteriaView(DashboardFormView):
         self.info_frame.grid_rowconfigure(0, weight=1)
 
 
-        self.back_button = ctk.CTkButton(self, text="Voltar", command=lambda: self.on_back())
+        self.back_button = create_button(self, text="Voltar", command=lambda: self.on_back())
         self.back_button.grid(row=99, column=0, padx=80, pady=80, sticky = "ws")

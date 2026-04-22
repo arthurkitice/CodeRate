@@ -34,11 +34,11 @@ class LoginView(CenteredFormView):
         self.password_entry.bind("<Return>", lambda e: self.login())
         
         # Botões
-        self.login_button = create_button(self, "Login", self.login)
+        self.login_button = create_button(self, "Login", self.login, width=350, height=35)
         self.login_button.grid(row=row, column=1, padx=20, pady=10)
         row += 1
         
-        self.back_button = create_button(self, "Voltar", self.back)
+        self.back_button = create_button(self, "Voltar", self.back, width=350, height=35)
         self.back_button.grid(row=row, column=1, padx=20, pady=10)
     
     def back(self):

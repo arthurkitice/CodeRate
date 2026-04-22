@@ -21,9 +21,9 @@ class AuthSelectorView(CenteredFormView):
         row = self.add_description(row, "Crie ou conecte-se a uma conta para utilizar o aplicativo")
 
         # Botões
-        self.login_button = create_button(self, "Fazer Login", self.on_login)
+        self.login_button = create_button(self, "Fazer Login", self.on_login, width=350, height=35)
         self.login_button.grid(row=row, column=1, padx=20, pady=10)
         row += 1
 
-        self.back_button = create_button(self, "Cadastrar", self.on_register)
+        self.back_button = create_button(self, "Cadastrar", self.on_register, width=350, height=35)
         self.back_button.grid(row=row, column=1, padx=20, pady=10)
