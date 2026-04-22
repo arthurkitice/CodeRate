@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from repositories.user_repository import UserRepository
+from repositories import UserRepository
 from models import User
-from dtos.user_dto import UserDTO, UserWithCriteriaDTO, CriteriaDTO
+from dtos import UserDTO, UserWithCriteriaDTO, CriteriaDTO
 import bcrypt
 
 

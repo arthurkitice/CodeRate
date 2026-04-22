@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
-from repositories.criteria_repository import CriteriaRepository
+from repositories import CriteriaRepository
 from services.user_service import UserService
 from models import Criteria
-from dtos.user_dto import CriteriaDTO
+from dtos import CriteriaDTO
 
 class CriteriaService:
     def __init__(self):
