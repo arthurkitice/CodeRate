@@ -27,7 +27,7 @@ class BaseView(ctk.CTkFrame, ABC):
             if isinstance(field, ctk.CTkEntry):
                 placeholder = field.cget("placeholder_text")
                 field.delete(0, "end")
-                field.configure(placeholder_text=placeholder)
+                field.configure(placeholder_text=placeholder) #Necessário, placeholder pode não voltar sozinho
             elif isinstance(field, ctk.CTkTextbox):
                 field.delete("0.0", "end")
         self.focus()

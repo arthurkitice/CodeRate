@@ -8,14 +8,8 @@ class Evaluation(Base):
 
     id = Column(Integer, primary_key=True)
     criteria_id = Column(Integer, ForeignKey("criteria.id", ondelete="CASCADE"))
-
     name = String
-
     date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    
-    submission_amount = Column(Integer)
-
-    avg_score = Column(Float)
 
     criteria = relationship("Criteria", back_populates="evaluations")
 

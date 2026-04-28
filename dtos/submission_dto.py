@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 from datetime import datetime
+from models import Submission
 
-@dataclass
-class SubmissionDTO:
+class SubmissionDTO(BaseModel):
     id: int
     evaluation_id: int
     file_name: str
@@ -10,3 +10,16 @@ class SubmissionDTO:
     date: datetime
     score: float
     feedback: str
+
+    @classmethod
+    def from_entity(cls, submission: Submission) -> "SubmissionDTO":
+        return cls(
+            id=submission.id,
+            evaluation_id=submission.evaluation_id,
+            file_name=submission.file_name,
+            file_path=submission.file_path,
+            date=submission.date,
+            score=submission.score,
+            feedback=submission.feedback
+        )
+    
