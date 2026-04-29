@@ -2,8 +2,10 @@ from database import get_db
 import customtkinter as ctk
 from services import UserService, CriteriaService
 from ui.views.dashboard_form_view import DashboardFormView
-from ui.widgets import create_small_criterion_button as criteria_button
+from ui.widgets import create_small_button as criteria_button
 from ui.widgets import create_edit_button, create_remove_button, create_button, NORMAL_COLOR
+
+
 
 class AllCriteriaView(DashboardFormView):
     def __init__(self, parent, user_id, on_criteria_create, on_criteria_edit, on_back):
@@ -46,11 +48,11 @@ class AllCriteriaView(DashboardFormView):
         self.button_frame.grid_columnconfigure(0, weight=1)
 
         for i, criterion in enumerate(criteria_list):
-            self.criteria_button = criteria_button(self.button_frame, criterion=criterion, command= lambda c=criterion: self.build_criteria_info(c, 2, 1))
+            self.criteria_button = criteria_button(self.button_frame, text=criterion.name, command= lambda c=criterion: self.build_criteria_info(c, 2, 1))
             self.criteria_button.grid(row=row+i, column=column, padx=(20, 5), pady=10, sticky="ew")
 
-            self.edit_button = create_edit_button(self, self.button_frame, criterion=criterion, no_bg_color=False)
-            self.remove_button = create_remove_button(self, self.button_frame, criterion, no_bg_color=False)
+            self.edit_button = create_edit_button(self.button_frame, command=lambda c_id=criterion.id: self.edit_criteria(c_id), no_bg_color=False)
+            self.remove_button = create_remove_button(self.button_frame, command=lambda c_id=criterion.id: self.delete_criteria(c_id), no_bg_color=False)
 
             self.edit_button.grid(row=row+i, column=column+1, padx=5, pady=10, sticky="ew")
             self.remove_button.grid(row=row+i, column=column+2, padx=5, pady=10, sticky="ew")
@@ -105,5 +107,5 @@ class AllCriteriaView(DashboardFormView):
         self.info_frame.grid_rowconfigure(0, weight=1)
 
 
-        self.back_button = create_button(self, text="Voltar", command=lambda: self.on_back())
+        self.back_button = create_button(self, text="Voltar", command=self.on_back)
         self.back_button.grid(row=99, column=0, padx=80, pady=80, sticky = "ws")

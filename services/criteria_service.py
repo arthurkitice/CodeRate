@@ -31,12 +31,7 @@ class CriteriaService:
 
         self.repository.create(db=db, criteria=criteria)
 
-        return CriteriaDTO(
-            id = criteria.id,
-            name = criteria.name,
-            description=criteria.description,
-            user_id=criteria.user_id
-        )
+        return CriteriaDTO.from_entity(criteria)
 
     def list_criteria(self, db: Session) -> list[CriteriaDTO]:
         criteria_list = self.repository.get_all(db)
@@ -57,12 +52,7 @@ class CriteriaService:
         if criteria is None:
             return None
         
-        return CriteriaDTO(
-            id = criteria.id,
-            name = criteria.name,
-            description=criteria.description,
-            user_id=criteria.user_id
-        )
+        return CriteriaDTO.from_entity(criteria)
     
     def list_criteria_by_user_id(self, db: Session, user_id: int) -> list[CriteriaDTO]:
         criteria_list = self.repository.list_by_user_id(db, user_id)

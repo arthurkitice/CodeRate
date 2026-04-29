@@ -7,6 +7,7 @@ from ui.views.user_dashboard_view import DashboardView
 from ui.views.new_criteria_view import NewCriteriaView
 from ui.views.edit_criteria_view import EditCriteriaView
 from ui.views.all_criteria_view import AllCriteriaView
+from ui.views.evaluation_view import EvaluationView
 
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("ui/color_theme.json")
@@ -43,7 +44,9 @@ class MainApp(ctk.CTkFrame):
         }
 
         # Comece com a view inicial (ex.: auth selector)
-        self.show_view("auth_selector")
+        # self.show_view("auth_selector")
+        user = self._test_user_dashboard("arthur@gmail.com")
+        self.show_view("dashboard", user=user)
 
     def show_view(self, view_name, **kwargs):
         # Esconda/destrua a view atual se existir
@@ -60,6 +63,7 @@ class MainApp(ctk.CTkFrame):
                     on_criteria_create=lambda user_id: self.show_view("new_criteria", user_id=user_id),
                     on_criteria_edit=lambda user_id, criteria_id: self.show_view("edit_criteria", user_id=user_id, criteria_id=criteria_id),
                     on_all_criteria=lambda user_id: self.show_view("all_criteria", user_id=user_id),
+                    on_start_evaluation=lambda criteria_id: self.show_view("start_evaluation", criteria_id=criteria_id),
                     on_logout=lambda: self.show_view("auth_selector")
                 )
             if view_name == "new_criteria":
@@ -93,6 +97,13 @@ class MainApp(ctk.CTkFrame):
                     on_criteria_edit=lambda user_id, criteria_id: self.show_view("edit_criteria", user_id=user_id, criteria_id=criteria_id, all_criteria=True),
                     on_back=self.go_to_dashboard
                 )
+            if view_name == "start_evaluation":
+                criteria_id = kwargs.get("criteria_id")
+                self.current_view = EvaluationView(
+                    self.container,
+                    criteria_id=criteria_id,
+                    on_back=self.go_to_dashboard
+                )
             # ... adicione outras views aqui
         else:
             # Mostre a nova view
@@ -123,3 +134,14 @@ class MainApp(ctk.CTkFrame):
     def on_authenticated(self, user):
         self.show_view("dashboard", user=user)
         self.current_user = user
+
+    def _test_user_dashboard(self, email):
+        from database import get_db
+        try:
+            with get_db() as db:
+                user_service = UserService()
+                user = user_service.get_user_by_email(db, email)
+                self.current_user = user
+                return user
+        except Exception as e:
+            print(f"Erro: {e}")

@@ -5,13 +5,24 @@ from database import get_db
 from ui.widgets import create_criterion_button, create_edit_button, create_remove_button, create_button
 
 class DashboardView(DashboardFormView):
-    def __init__(self, parent, user, on_criteria_create, on_criteria_edit, on_all_criteria, on_logout):
+    def __init__(
+            self, 
+            parent, 
+            user, 
+            on_criteria_create, 
+            on_criteria_edit, 
+            on_all_criteria, 
+            on_start_evaluation,
+            on_logout
+        ):
+
         self.user_service = UserService()
         self.criteria_service = CriteriaService()
         self.user = user
         self.on_criteria_create = on_criteria_create
         self.on_criteria_edit = on_criteria_edit
         self.on_all_criteria = on_all_criteria
+        self.on_start_evaluation = on_start_evaluation
         self.on_logout = on_logout
         super().__init__(parent)
 
@@ -94,14 +105,14 @@ class DashboardView(DashboardFormView):
 
         for i, criterion in enumerate(criteria_list):
             # Botão principal
-            criterion_button = create_criterion_button(self, frame=self.criteria_frame, criterion=criterion)
+            criterion_button = create_criterion_button(frame=self.criteria_frame, text=criterion.name, command=lambda c_id=criterion.id: self.on_start_evaluation(c_id))
             criterion_button.grid(row=1, column=i, rowspan=3, padx=10, pady=5, sticky="we")
             
             # Botões pequenos
-            edit_button = create_edit_button(self, frame=self.criteria_frame, criterion=criterion)
+            edit_button = create_edit_button(frame=self.criteria_frame, command=lambda c_id=criterion.id: self.edit_criteria(c_id))
             edit_button.place(in_=criterion_button, relx=0.85, rely=0.1, anchor="ne")
             
-            remove_button = create_remove_button(self, frame=self.criteria_frame, criterion=criterion)
+            remove_button = create_remove_button(frame=self.criteria_frame, command=lambda c_id=criterion.id: self.delete_criteria(c_id))
             remove_button.place(in_=criterion_button, relx=0.97, rely=0.1, anchor="ne")
 
             # Sincroniza o hover: quando o mouse entra/sai do criterion_button, muda os pequenos

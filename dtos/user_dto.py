@@ -6,7 +6,7 @@ from models import User
 class UserDTO(BaseModel):
     id: int
     name: str
-    email: EmailStr
+    email: str
 
     @classmethod
     def from_entity(cls, user: User) -> "UserDTO":
@@ -19,7 +19,7 @@ class UserDTO(BaseModel):
 class UserWithCriteriaDTO(BaseModel):
     id: int
     name: str
-    email: EmailStr
+    email: str
     criteria: list[CriteriaDTO]
 
     @classmethod

@@ -5,9 +5,10 @@ edit_icon = ctk.CTkImage(dark_image=Image.open("ui/icons/edit_icon.png"), size=(
 trash_icon = ctk.CTkImage(dark_image=Image.open("ui/icons/trash_icon.png"), size=(30, 30))
 
 NORMAL_COLOR = "#212435"
+MAX_TEXT_LEN_SMALL_BTN = 50
 
 def create_entry(parent, placeholder, **kwargs):
-        return ctk.CTkEntry(
+        entry = ctk.CTkEntry(
             parent,
             font=ctk.CTkFont(size=15),
             width=350,
@@ -18,6 +19,9 @@ def create_entry(parent, placeholder, **kwargs):
             text_color="black",
             **kwargs
         )
+        entry.configure(**kwargs)
+
+        return entry
 
 def create_button(parent, text, command, **kwargs):
     button = ctk.CTkButton(
@@ -35,12 +39,12 @@ def create_button(parent, text, command, **kwargs):
 
     return button
 
-def create_criterion_button(parent, frame, criterion):
-        truncated_name = criterion.name[:30] + '...' if len(criterion.name) > 30 else criterion.name
+def create_criterion_button(frame, text, command, max_text_len=30):
+        text = text[:max_text_len] + '...' if len(text) > max_text_len else text
         criterion_button = ctk.CTkButton(
             frame,
-            text=truncated_name,
-            command=lambda c=criterion: parent.start_evaluation(c.id),
+            text=text,
+            command=command,
             border_width=0,
             corner_radius=30,
             cursor="hand2",
@@ -51,7 +55,7 @@ def create_criterion_button(parent, frame, criterion):
         )
         return criterion_button
 
-def create_remove_button(parent, frame, criterion, no_bg_color=True):
+def create_remove_button(frame, command, no_bg_color=True):
     remove_button = ctk.CTkButton(
         frame,
         image=trash_icon,
@@ -60,7 +64,7 @@ def create_remove_button(parent, frame, criterion, no_bg_color=True):
         border_width=0,
         cursor="hand2",
         corner_radius=100,
-        command=lambda c_id=criterion.id: parent.delete_criteria(c_id),
+        command=command,
         width=15,
         height=15
     )
@@ -70,8 +74,7 @@ def create_remove_button(parent, frame, criterion, no_bg_color=True):
 
     return remove_button
 
-def create_edit_button(parent, frame, criterion, no_bg_color=True):
-    NORMAL_COLOR = "#212435"
+def create_edit_button(frame, command, no_bg_color=True):
     edit_button = ctk.CTkButton(
         frame,
         image=edit_icon,
@@ -80,7 +83,7 @@ def create_edit_button(parent, frame, criterion, no_bg_color=True):
         border_width=0,
         cursor="hand2",
         corner_radius=100,
-        command=lambda c_id=criterion.id: parent.edit_criteria(c_id),
+        command=command,
         width=15,
         height=15
     )
@@ -90,17 +93,20 @@ def create_edit_button(parent, frame, criterion, no_bg_color=True):
 
     return edit_button
 
-def create_small_criterion_button(frame, criterion, command, max_name_len=50):
-    truncated_name = criterion.name[:max_name_len] + '...' if len(criterion.name) > max_name_len else criterion.name
+def create_small_button(frame, text, command, max_text_len=50, **kwargs):
+    text=text[:max_text_len] + '...' if len(text) > max_text_len else text
     criterion_button = ctk.CTkButton(
         frame,
-        text=truncated_name,
+        text=text,
         command=command,
         border_width=0,
         corner_radius=10,
         cursor="hand2",
         font=ctk.CTkFont(size=12),
         anchor="w",
-        height=40,
+        height=40
     )
+
+    criterion_button.configure(**kwargs)
+
     return criterion_button
