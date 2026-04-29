@@ -2,11 +2,51 @@ import os
 from sqlalchemy.orm import Session
 from repositories.submission_repository import SubmissionRepository
 from models import Submission
-from dtos.submission_dto import SubmissionDTO
+from dtos.submission_dto import SubmissionDTO, TempSubmissionDTO
 import shutil
 import os
+import tempfile
 from pathlib import Path
 import subprocess
+
+class EvaluationStagingArea:
+    def __init__(self, final_upload_dir: Path):
+        self.final_upload_dir = final_upload_dir
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
+        self.temp_path = Path(self.temp_dir_obj.name)
+        self.drafts: list[TempSubmissionDTO] = []
+
+    def add_file(self, original_file_path: str) -> TempSubmissionDTO | None:
+        source_path = Path(original_file_path)
+        if not source_path.exists():
+            return None
+            
+        dest_path = self.temp_path / source_path.name
+        shutil.copy2(source_path, dest_path)
+        
+        draft = TempSubmissionDTO(file_name=source_path.name, file_path=str(dest_path))
+        self.drafts.append(draft)
+        return draft
+
+    def remove_file(self, file_name: str):
+        for draft in self.drafts:
+            if draft.file_name == file_name:
+                Path(draft.file_path).unlink(missing_ok=True)
+                self.drafts.remove(draft)
+                break
+
+    def commit(self, evaluation_id: int):
+        final_folder = self.final_upload_dir / f"evaluation_{evaluation_id}"
+        final_folder.mkdir(parents=True, exist_ok=True)
+        for draft in self.drafts:
+            final_path = final_folder / draft.file_name
+            if Path(draft.file_path).exists():
+                shutil.move(str(draft.file_path), str(final_path))
+        self.cleanup()
+
+    def cleanup(self):
+        self.drafts.clear()
+        self.temp_dir_obj.cleanup()
 
 class SubmissionService:
     def __init__(self):
@@ -14,50 +54,44 @@ class SubmissionService:
         self.upload_dir = Path("uploads/submissions")
         self.upload_dir.mkdir(parents=True, exist_ok=True)
         self.app = None
-    
-    def select_and_save_file(self, evaluation_id: int) -> tuple[str | None, str | None]:
-        """
-        Abre o seletor 100% nativo do Pop!_OS/Linux chamando o Zenity.
-        """
+        
+        # O Service instancia a área de rascunho quando ele nasce
+        self.staging = EvaluationStagingArea(self.upload_dir)
+
+    def select_and_save_file(self) -> TempSubmissionDTO | None:
+        """Abre o Zenity e já manda o arquivo para a pasta temporária /tmp."""
         try:
-            # Invoca o programa C nativo do Linux isolado do CustomTkinter
             resultado = subprocess.run(
                 [
-                    "zenity", 
-                    "--file-selection", 
-                    "--title=Selecione o arquivo de código",
-                    "--file-filter=Códigos Python | *.py",
-                    "--file-filter=Códigos JavaScript | *.js",
-                    "--file-filter=C/C++ e Java | *.c *.cpp *.h *.java",
-                    "--file-filter=Compactados | *.zip *.rar",
+                    "zenity", "--file-selection", "--title=Selecione o arquivo de código",
+                    "--file-filter=Códigos Python | *.py", "--file-filter=C/C++ e Java | *.c *.cpp *.h *.java",
                     "--file-filter=Todos os arquivos | *"
                 ],
-                capture_output=True, 
-                text=True
+                capture_output=True, text=True
             )
             
-            # O código de retorno 0 significa sucesso. Diferente de 0 significa que o usuário fechou ou cancelou.
             if resultado.returncode != 0:
-                return None, None
+                return None
                 
-            # O caminho do arquivo vem com uma quebra de linha no final (\n), o strip() limpa isso.
             file_path_str = resultado.stdout.strip()
             
+            # Delega a cópia para a área de estágio e retorna o DTO pronto
+            return self.staging.add_file(file_path_str)
+            
         except FileNotFoundError:
-            print("Erro: Zenity não encontrado. No Pop!_OS/Ubuntu, instale com: sudo apt install zenity")
-            return None, None
+            print("Erro: Zenity não encontrado.")
+            return None
 
-        # O usuário selecionou o arquivo com sucesso, agora é só fazer a cópia
-        file_path = Path(file_path_str)
-        dest_folder = self.upload_dir / f"evaluation_{evaluation_id}"
+    # --- PONTES PARA A VIEW COMUNICAR COM O RASCUNHO ---
+    
+    def remove_from_staging(self, file_name: str):
+        self.staging.remove_file(file_name)
         
-        # Cria a pasta caso a avaliação seja nova
-        dest_folder.mkdir(parents=True, exist_ok=True)
-        dest_path = dest_folder / file_path.name
+    def commit_staging(self, evaluation_id: int):
+        self.staging.commit(evaluation_id)
         
-        shutil.copy2(file_path, dest_path)
-        
-        return file_path.name, str(dest_path)
+    def cleanup_staging(self):
+        self.staging.cleanup()
 
     def create_submission(self, db: Session, evaluation_id: int, file_name: str, file_path: str, score: float, feedback: str) -> SubmissionDTO:
         # Validação de integridade: Garante que o ficheiro realmente existe no computador

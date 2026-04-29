@@ -22,4 +22,7 @@ class SubmissionDTO(BaseModel):
             score=submission.score,
             feedback=submission.feedback
         )
-    
+
+class TempSubmissionDTO(BaseModel):
+    file_name: str
+    file_path: str

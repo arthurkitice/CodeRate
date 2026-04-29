@@ -1,7 +1,7 @@
 from database import get_db
 import customtkinter as ctk
 from services import EvaluationService, SubmissionService
-from dtos import SubmissionDTO
+from dtos import TempSubmissionDTO
 from ui.views.dashboard_form_view import DashboardFormView
 from ui.widgets import create_small_button, create_button, create_edit_button, create_remove_button
 from functools import partial
@@ -14,7 +14,7 @@ class EvaluationView(DashboardFormView):
         self.on_back = on_back
         self.on_new_file = None
         self.on_start = None
-        self.files:list[SubmissionDTO] = []
+        self.files:list[TempSubmissionDTO] = []
         super().__init__(parent)
 
     def _list_all_evaluations(self):
@@ -27,26 +27,11 @@ class EvaluationView(DashboardFormView):
 
     def add_new_file(self):
         """Callback do botão 'Adicionar arquivo'"""
-        # Aqui você precisa ter o evaluation_id
-        # Se for uma nova avaliação, pode criar temporariamente ou esperar salvar
+        # Abre o seletor. Se o usuário escolher, ele já volta na pasta /tmp
+        draft_dto = self.submission_service.select_and_save_file()
         
-        file_name, file_path = self.submission_service.select_and_save_file(
-            evaluation_id=999  # Temporário, ajustar depois
-        )
-        
-        if file_name and file_path:
-            # Cria DTO temporário (ainda não salvo no banco)
-            submission = SubmissionDTO(
-                id=0,
-                evaluation_id=999,
-                file_name=file_name,
-                file_path=file_path,
-                date="2026-04-29 00:28:31.560415",
-                score=1,
-                feedback=""
-            )
-            
-            self.add_file(submission)
+        if draft_dto:
+            self.add_file(draft_dto)
 
     def delete_evaluation(self, evaluation_id): #DELETAR AVALIAÇÃO AQUI
         try:
@@ -79,6 +64,10 @@ class EvaluationView(DashboardFormView):
         self.build_evaluation_files(row=2)
 
     def remove_file(self, submission):
+        # 1. Avisa o Service para apagar o arquivo da pasta /tmp
+        self.submission_service.remove_from_staging(submission.file_name)
+        
+        # 2. Remove da lista visual da tela
         self.files.remove(submission)
         self.build_evaluation_files(row=2)
 
@@ -134,8 +123,16 @@ class EvaluationView(DashboardFormView):
         self.bottom_frame = ctk.CTkFrame(self.main_frame)
         self.bottom_frame.grid(row=99, column=0, pady=(0, 80), sticky="nsew")
 
-        self.back_button = create_button(self.bottom_frame, text="Voltar", command=self.on_back)
+        self.back_button = create_button(self.bottom_frame, text="Voltar", command=self.back)
         self.back_button.grid(row=0, column=0, padx=20, pady=10, sticky = "ws")
 
         self.start_button = create_button(self.bottom_frame, text="Iniciar Avaliação", command=self.on_start)
         self.start_button.grid(row=0, column=1, padx=20, pady=10, sticky = "ws")
+
+    def back(self):
+        """Disparado quando clica em Voltar"""
+        # Destrói a pasta temporária do Pop!_OS para não deixar lixo
+        self.submission_service.cleanup_staging()
+        
+        if self.on_back:
+            self.on_back()
