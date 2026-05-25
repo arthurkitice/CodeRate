@@ -1,7 +1,6 @@
 from database import get_db
 import customtkinter as ctk
 from services import EvaluationService, SubmissionService
-from dtos import TempSubmissionDTO
 from ui.views.dashboard_form_view import DashboardFormView
 from ui.widgets import create_small_button, create_button, create_edit_button, create_remove_button
 from functools import partial
@@ -14,16 +13,12 @@ class EvaluationView(DashboardFormView):
         self.on_back = on_back
         self.on_new_file = None
         self.on_start = None
-        self.files:list[TempSubmissionDTO] = []
+        self.files = []
         super().__init__(parent)
 
     def _list_all_evaluations(self):
-        try:
-            with get_db() as db:
-                evaluation = self.evaluation_service.list_evaluations_by_criteria(db, self.criteria_id)
-                return list(reversed(evaluation))
-        except Exception as e:
-            self.show_error(f"Erro inesperado: {str(e)}")
+        evaluation = self.evaluation_service.list_evaluations_by_criteria(self.criteria_id)
+        return list(reversed(evaluation))
 
     def add_new_file(self):
         """Callback do botão 'Adicionar arquivo'"""
@@ -34,12 +29,7 @@ class EvaluationView(DashboardFormView):
             self.add_file(draft_dto)
 
     def delete_evaluation(self, evaluation_id): #DELETAR AVALIAÇÃO AQUI
-        try:
-            with get_db() as db:
-                self.evaluation_service.delete_evaluation(db, evaluation_id)
-        except Exception as e:
-            self.show_error(f"Erro inesperado: {str(e)}")
-
+        self.evaluation_service.delete_evaluation(evaluation_id)
         self.build_evaluation_buttons()
 
     def build_evaluation_buttons(self, row=0, column=0):

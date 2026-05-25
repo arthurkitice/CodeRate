@@ -1,13 +1,12 @@
 import os
-from sqlalchemy.orm import Session
 from repositories.submission_repository import SubmissionRepository
 from models import Submission
 from dtos.submission_dto import SubmissionDTO, TempSubmissionDTO
 import shutil
-import os
 import tempfile
 from pathlib import Path
 import subprocess
+from database import get_db
 
 class EvaluationStagingArea:
     def __init__(self, final_upload_dir: Path):
@@ -54,12 +53,9 @@ class SubmissionService:
         self.upload_dir = Path("uploads/submissions")
         self.upload_dir.mkdir(parents=True, exist_ok=True)
         self.app = None
-        
-        # O Service instancia a área de rascunho quando ele nasce
         self.staging = EvaluationStagingArea(self.upload_dir)
 
     def select_and_save_file(self) -> TempSubmissionDTO | None:
-        """Abre o Zenity e já manda o arquivo para a pasta temporária /tmp."""
         try:
             resultado = subprocess.run(
                 [
@@ -74,16 +70,12 @@ class SubmissionService:
                 return None
                 
             file_path_str = resultado.stdout.strip()
-            
-            # Delega a cópia para a área de estágio e retorna o DTO pronto
             return self.staging.add_file(file_path_str)
             
         except FileNotFoundError:
             print("Erro: Zenity não encontrado.")
             return None
 
-    # --- PONTES PARA A VIEW COMUNICAR COM O RASCUNHO ---
-    
     def remove_from_staging(self, file_name: str):
         self.staging.remove_file(file_name)
         
@@ -93,8 +85,7 @@ class SubmissionService:
     def cleanup_staging(self):
         self.staging.cleanup()
 
-    def create_submission(self, db: Session, evaluation_id: int, file_name: str, file_path: str, score: float, feedback: str) -> SubmissionDTO:
-        # Validação de integridade: Garante que o ficheiro realmente existe no computador
+    def create_submission(self, evaluation_id: int, file_name: str, file_path: str, score: float, feedback: str) -> SubmissionDTO:
         if not os.path.exists(file_path):
             raise ValueError(f"O ficheiro não foi encontrado no sistema: {file_path}")
 
@@ -106,44 +97,25 @@ class SubmissionService:
             feedback=feedback
         )
 
-        self.repository.create(db, submission)
+        with get_db() as db:
+            self.repository.create(db, submission)
+            return SubmissionDTO.from_entity(submission)
 
-        return SubmissionDTO.from_entity(submission)
+    def get_submission_by_id(self, submission_id: int) -> SubmissionDTO | None:
+        with get_db() as db:
+            submission = self.repository.get_by_id(db, submission_id)
+            if not submission:
+                return None
+            return SubmissionDTO.from_entity(submission)
 
-    def get_submission_by_id(self, db: Session, submission_id: int) -> SubmissionDTO | None:
-        submission = self.repository.get_by_id(db, submission_id)
+    def list_submissions_by_evaluation(self, evaluation_id: int) -> list[SubmissionDTO]:
+        with get_db() as db:
+            submissions = self.repository.list_by_evaluation_id(db, evaluation_id)
+            return [SubmissionDTO.from_entity(s) for s in submissions]
 
-        if not submission:
-            return None
-        
-        return SubmissionDTO(
-            id=submission.id,
-            evaluation_id=submission.evaluation_id,
-            file_name=submission.file_name,
-            file_path=submission.file_path,
-            date=submission.date,
-            score=submission.score,
-            feedback=submission.feedback
-        )
-
-    def list_submissions_by_evaluation(self, db: Session, evaluation_id: int) -> list[SubmissionDTO]:
-        submissions = self.repository.list_by_evaluation_id(db, evaluation_id)
-        return [
-            SubmissionDTO(
-                id=s.id,
-                evaluation_id=s.evaluation_id,
-                file_name=s.file_name,
-                file_path=s.file_path,
-                date=s.date,
-                score=s.score,
-                feedback=s.feedback
-            ) for s in submissions
-        ]
-
-    def delete_submission(self, db: Session, submission_id: int) -> bool:
-        submission = self.repository.get_by_id(db, submission_id)
-
-        if not submission:
-            return False
-        
-        return self.repository.delete(db, submission)
+    def delete_submission(self, submission_id: int) -> bool:
+        with get_db() as db:
+            submission = self.repository.get_by_id(db, submission_id)
+            if not submission:
+                return False
+            return self.repository.delete(db, submission)

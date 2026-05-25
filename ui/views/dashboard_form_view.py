@@ -22,13 +22,3 @@ class DashboardFormView(BaseView):
             justify="left"
         )
         label.grid(row=row, column=column, padx=20, pady=20, sticky="wn")
-    
-    def add_username(self, frame, name: str, row: int = 0, column: int = 2):
-        """Adiciona descrição (ex: 'Digite suas credenciais...')"""
-        label = ctk.CTkLabel(
-            frame,
-            text=name,
-            font=ctk.CTkFont(size=26, weight="bold"),
-            justify="left"
-        )
-        label.grid(row=row, column=column, padx=20, pady=20, sticky="w")

@@ -74,12 +74,8 @@ class NewCriteriaView(DashboardFormView):
             self.show_error("Erro: Preencha nome e descrição.")
             return
 
-        try:
-            with get_db() as db:
-                criteria = self.criteria_service.create_criteria(db, name, description)
-                if criteria:
-                    self.on_criteria_created()
-                else:
-                    self.show_error("Erro: Não foi possível criar o critério.")
-        except Exception as e:
-            self.show_error(f"Erro {str(e)}")
+        criteria = self.criteria_service.create_criteria(name, description)
+        if criteria:
+            self.on_criteria_created()
+        else:
+            self.show_error("Erro: Não foi possível criar o critério.")

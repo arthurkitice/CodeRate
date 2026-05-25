@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from .views.user_dashboard_view import DashboardView
+from .views.dashboard_view import DashboardView
 from ui.views.new_criteria_view import NewCriteriaView
 from ui.views.edit_criteria_view import EditCriteriaView
 from ui.views.all_criteria_view import AllCriteriaView
@@ -9,9 +9,12 @@ from functools import partial
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("ui/color_theme.json")
 
-class MainApp(ctk.CTkFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
+class App(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+
+        self.title("CodeRate")
+        self.geometry("1100x700")
 
         # Container principal para as views
         self.container = ctk.CTkFrame(self)
@@ -26,7 +29,7 @@ class MainApp(ctk.CTkFrame):
         if hasattr(self, 'current_view') and self.current_view:
             self.current_view.pack_forget()
 
-        if view_name not in self.views:
+        if view_name:
             if view_name == "dashboard":
                 self.current_view = DashboardView(
                     self.container,
@@ -67,6 +70,5 @@ class MainApp(ctk.CTkFrame):
                     criteria_id=criteria_id,
                     on_back=self.dashboard
                 )
-        else:
-            self.current_view = self.views[view_name]
-        self.current_view.pack(fill="both", expand=True)
+                
+            self.current_view.pack(fill="both", expand=True)

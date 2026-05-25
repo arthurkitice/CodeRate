@@ -22,23 +22,14 @@ class DashboardView(DashboardFormView):
         super().__init__(parent)
 
     def _gen_criteria_list(self):
-        try:
-            with get_db() as db:
-                criteria = self.criteria_service.list_criteria(db)
-                return list(reversed(criteria[-4:]))
-        except Exception as e:
-            self.show_error(f"Erro inesperado: {str(e)}")
+        criteria = self.criteria_service.list_criteria()
+        return list(reversed(criteria[-4:]))
 
     def create_criteria(self):
         self.on_criteria_create()
 
     def delete_criteria(self, criteria_id):
-        try:
-            with get_db() as db:
-                self.criteria_service.delete_criteria(db, criteria_id)
-        except Exception as e:
-            self.show_error(f"Erro inesperado: {str(e)}")
-
+        self.criteria_service.delete_criteria(criteria_id)
         self._gen_criteria_buttons()
 
     def edit_criteria(self, criteria_id):

@@ -17,4 +17,4 @@ class Criteria(Base):
     )
 
     def __repr__(self):
-        return f"Criteria(id={self.id}, name='{self.name}', description='{self.description}'"
+        return f"Criteria(id={self.id}, name='{self.name}', description='{self.description}')"
