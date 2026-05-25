@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from services import UserService, CriteriaService
+from services import CriteriaService
 from ui.views.dashboard_form_view import DashboardFormView
 from database import get_db
 from ui.widgets import create_criterion_button, create_edit_button, create_remove_button, create_button
@@ -7,39 +7,30 @@ from ui.widgets import create_criterion_button, create_edit_button, create_remov
 class DashboardView(DashboardFormView):
     def __init__(
             self, 
-            parent, 
-            user, 
+            parent,
             on_criteria_create, 
             on_criteria_edit, 
             on_all_criteria, 
-            on_start_evaluation,
-            on_logout
+            on_start_evaluation
         ):
 
-        self.user_service = UserService()
         self.criteria_service = CriteriaService()
-        self.user = user
         self.on_criteria_create = on_criteria_create
         self.on_criteria_edit = on_criteria_edit
         self.on_all_criteria = on_all_criteria
         self.on_start_evaluation = on_start_evaluation
-        self.on_logout = on_logout
         super().__init__(parent)
 
     def _gen_criteria_list(self):
         try:
             with get_db() as db:
-                criteria = self.criteria_service.list_criteria_by_user_id(db, self.user.id)
+                criteria = self.criteria_service.list_criteria(db)
                 return list(reversed(criteria[-4:]))
         except Exception as e:
             self.show_error(f"Erro inesperado: {str(e)}")
 
-    def logout(self):
-        self.on_logout()
-
     def create_criteria(self):
-        user_id = self.user.id
-        self.on_criteria_create(user_id)
+        self.on_criteria_create()
 
     def delete_criteria(self, criteria_id):
         try:
@@ -51,19 +42,13 @@ class DashboardView(DashboardFormView):
         self._gen_criteria_buttons()
 
     def edit_criteria(self, criteria_id):
-        self.on_criteria_edit(criteria_id=criteria_id, user_id=self.user.id)
+        self.on_criteria_edit(criteria_id=criteria_id)
 
     def build_ui(self):
         self.grid_columnconfigure(1, weight=1)
         # Título
         self.add_title(self)
         self.add_heading(self, "Critérios de Avaliação")
-        self.add_username(self, self.user.name)
-
-        # Botão
-        
-        self.logout_button = create_button(self, text="Encerrar Sessão", command=self.logout)
-        self.logout_button.grid(row=0, column=3, padx=20, pady=10, sticky="ew")
 
         self.button_frame = ctk.CTkFrame(self)
         self.button_frame.grid(row=1, column=0)
@@ -71,7 +56,7 @@ class DashboardView(DashboardFormView):
         self.create_criteria_button = create_button(self.button_frame, text="Criar Critério", command=self.create_criteria)
         self.create_criteria_button.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
 
-        self.list_criteria_button = create_button(self.button_frame, text="Todos os Critérios", command= lambda: self.on_all_criteria(self.user.id))
+        self.list_criteria_button = create_button(self.button_frame, text="Todos os Critérios", command= self.on_all_criteria)
         self.list_criteria_button.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
 
         self._gen_criteria_buttons()

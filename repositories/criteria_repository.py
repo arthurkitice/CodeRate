@@ -13,9 +13,6 @@ class CriteriaRepository:
 
     def get_by_id(self, db: Session, criteria_id: int) -> Criteria | None:
         return db.query(Criteria).filter(Criteria.id == criteria_id).first()
-    
-    def list_by_user_id(self, db: Session, user_id: int) -> list[Criteria]:
-        return db.query(Criteria).filter(Criteria.user_id == user_id).all()
 
     def update(self, db: Session, criteria: Criteria) -> Criteria | None:
         db.commit()

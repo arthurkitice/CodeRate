@@ -5,10 +5,10 @@ from ui.views.dashboard_form_view import DashboardFormView
 from ui.widgets import create_button
 
 class NewCriteriaView(DashboardFormView):
-    def __init__(self, parent, on_criteria_created, on_back, user_id, criteria_id=None):
+    def __init__(self, parent, on_criteria_created, on_back, criteria_id=None):
         self.on_criteria_created = on_criteria_created
         self.on_back = on_back
-        self.user_id = user_id
+        
         self.criteria_id = criteria_id
         self.criteria_service = CriteriaService()
         super().__init__(parent)
@@ -76,7 +76,7 @@ class NewCriteriaView(DashboardFormView):
 
         try:
             with get_db() as db:
-                criteria = self.criteria_service.create_criteria(db, name, description, self.user_id)
+                criteria = self.criteria_service.create_criteria(db, name, description)
                 if criteria:
                     self.on_criteria_created()
                 else:

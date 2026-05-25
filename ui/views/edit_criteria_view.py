@@ -3,9 +3,9 @@ from ui.views.new_criteria_view import NewCriteriaView
 
 
 class EditCriteriaView(NewCriteriaView):
-    def __init__(self, parent, on_criteria_updated, on_back, user_id, criteria_id):
+    def __init__(self, parent, on_criteria_updated, on_back, criteria_id):
         self.on_criteria_updated = on_criteria_updated
-        super().__init__(parent, on_criteria_updated, on_back, user_id, criteria_id)
+        super().__init__(parent, on_criteria_updated, on_back, criteria_id)
         self.load_data()
 
     def get_subtitle(self):

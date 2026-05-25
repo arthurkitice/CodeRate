@@ -1,6 +1,6 @@
 from database import get_db
 import customtkinter as ctk
-from services import UserService, CriteriaService
+from services import CriteriaService
 from ui.views.dashboard_form_view import DashboardFormView
 from ui.widgets import create_small_button as criteria_button
 from ui.widgets import create_edit_button, create_remove_button, create_button, NORMAL_COLOR
@@ -8,10 +8,8 @@ from ui.widgets import create_edit_button, create_remove_button, create_button, 
 
 
 class AllCriteriaView(DashboardFormView):
-    def __init__(self, parent, user_id, on_criteria_create, on_criteria_edit, on_back):
-        self.user_service = UserService()
+    def __init__(self, parent, on_criteria_create, on_criteria_edit, on_back):
         self.criteria_service = CriteriaService()
-        self.user_id = user_id
         self.on_criteria_create = on_criteria_create
         self.on_criteria_edit = on_criteria_edit
         self.on_back = on_back
@@ -20,13 +18,13 @@ class AllCriteriaView(DashboardFormView):
     def _list_all_criteria(self):
         try:
             with get_db() as db:
-                criteria = self.criteria_service.list_criteria_by_user_id(db, self.user_id)
+                criteria = self.criteria_service.list_criteria(db)
                 return list(reversed(criteria))
         except Exception as e:
             self.show_error(f"Erro inesperado: {str(e)}")
 
     def edit_criteria(self, criteria_id):
-        self.on_criteria_edit(criteria_id=criteria_id, user_id=self.user_id)
+        self.on_criteria_edit(criteria_id=criteria_id)
 
     def delete_criteria(self, criteria_id):
         try:

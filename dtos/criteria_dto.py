@@ -6,22 +6,20 @@ class CriteriaDTO(BaseModel):
     id: int
     name: str
     description: str
-    user_id: int
 
     @classmethod
     def from_entity(cls, criteria: Criteria) -> "CriteriaWithEvaluationsDTO":
         return cls(
             id=criteria.id,
             name=criteria.name,
-            description=criteria.description,
-            user_id=criteria.user_id
+            description=criteria.description
         )
 
 class CriteriaWithEvaluationsDTO(BaseModel):
     id: int
     name: str
     description: str
-    user_id: int
+    
     evaluations: list[EvaluationDTO]
 
     @classmethod
@@ -30,6 +28,5 @@ class CriteriaWithEvaluationsDTO(BaseModel):
             id=criteria.id,
             name=criteria.name,
             description=criteria.description,
-            user_id=criteria.user_id,
             evaluations=[EvaluationDTO.from_entity(e) for e in criteria.evaluations]
         )
