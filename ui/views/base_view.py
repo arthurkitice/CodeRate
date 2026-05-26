@@ -9,6 +9,7 @@ class BaseView(ctk.CTkFrame, ABC):
     """
     def __init__(self, parent, **kwargs):
         super().__init__(parent)
+        
         self.setup_grid()
         self.build_ui()
     

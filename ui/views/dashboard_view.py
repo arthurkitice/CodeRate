@@ -1,8 +1,7 @@
 import customtkinter as ctk
 from services import CriteriaService
 from ui.views.dashboard_form_view import DashboardFormView
-from database import get_db
-from ui.widgets import create_criterion_button, create_edit_button, create_remove_button, create_button
+from ui.widgets import CriterionButton, CustomButton
 
 class DashboardView(DashboardFormView):
     def __init__(
@@ -44,25 +43,13 @@ class DashboardView(DashboardFormView):
         self.button_frame = ctk.CTkFrame(self)
         self.button_frame.grid(row=1, column=0)
 
-        self.create_criteria_button = create_button(self.button_frame, text="Criar Critério", command=self.create_criteria)
+        self.create_criteria_button = CustomButton(self.button_frame, text="Criar Critério", command=self.create_criteria)
         self.create_criteria_button.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
 
-        self.list_criteria_button = create_button(self.button_frame, text="Todos os Critérios", command= self.on_all_criteria)
+        self.list_criteria_button = CustomButton(self.button_frame, text="Todos os Critérios", command= self.on_all_criteria)
         self.list_criteria_button.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
 
         self._gen_criteria_buttons()
-
-    def _on_criterion_hover_enter(self, edit_btn, remove_btn):
-        """Quando mouse entra no critério"""
-        hover_color = "#171926"
-        edit_btn.configure(fg_color=hover_color, bg_color=hover_color)
-        remove_btn.configure(fg_color=hover_color, bg_color=hover_color)
-
-    def _on_criterion_hover_leave(self, edit_btn, remove_btn):
-        """Quando mouse sai do critério"""
-        normal_color = "#212435"
-        edit_btn.configure(fg_color=normal_color, bg_color=normal_color)
-        remove_btn.configure(fg_color=normal_color, bg_color=normal_color)
 
     def _gen_criteria_buttons(self): 
         # Lista os últimos 4 critérios (ou menos, preenchidos com None)
@@ -81,16 +68,5 @@ class DashboardView(DashboardFormView):
 
         for i, criterion in enumerate(criteria_list):
             # Botão principal
-            criterion_button = create_criterion_button(frame=self.criteria_frame, text=criterion.name, command=lambda c_id=criterion.id: self.on_start_evaluation(c_id))
+            criterion_button = CriterionButton(parent=self, frame=self.criteria_frame, text=criterion.name, criteria_id=criterion.id)
             criterion_button.grid(row=1, column=i, rowspan=3, padx=10, pady=5, sticky="we")
-            
-            # Botões pequenos
-            edit_button = create_edit_button(frame=self.criteria_frame, command=lambda c_id=criterion.id: self.edit_criteria(c_id))
-            edit_button.place(in_=criterion_button, relx=0.85, rely=0.1, anchor="ne")
-            
-            remove_button = create_remove_button(frame=self.criteria_frame, command=lambda c_id=criterion.id: self.delete_criteria(c_id))
-            remove_button.place(in_=criterion_button, relx=0.97, rely=0.1, anchor="ne")
-
-            # Sincroniza o hover: quando o mouse entra/sai do criterion_button, muda os pequenos
-            criterion_button.bind("<Enter>", lambda e, eb= edit_button, rb=remove_button: self._on_criterion_hover_enter(eb, rb))
-            criterion_button.bind("<Leave>", lambda e, eb= edit_button, rb=remove_button: self._on_criterion_hover_leave(eb, rb))

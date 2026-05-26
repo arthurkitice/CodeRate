@@ -2,7 +2,7 @@ from database import get_db
 import customtkinter as ctk
 from services import EvaluationService, SubmissionService
 from ui.views.dashboard_form_view import DashboardFormView
-from ui.widgets import create_small_button, create_button, create_edit_button, create_remove_button
+from ui.widgets import SmallButton, EditButton, RemoveButton, CustomButton
 from functools import partial
 
 class EvaluationView(DashboardFormView):
@@ -43,10 +43,10 @@ class EvaluationView(DashboardFormView):
         self.button_frame.grid_columnconfigure(0, weight=1)
 
         for i, evaluation in enumerate(evaluation_list):
-            self.evaluation_button = create_small_button(self.button_frame, text=evaluation.name, command=partial())
+            self.evaluation_button = SmallButton(self.button_frame, text=evaluation.name, command=partial())
             self.evaluation_button.grid(row=i, column=0, padx=(20, 5), pady=10, sticky="ew")
 
-            self.remove_button = create_remove_button(self.button_frame, command=partial(self.delete_evaluation, evaluation.id), no_bg_color=False)
+            self.remove_button = RemoveButton(self.button_frame, command=partial(self.delete_evaluation, evaluation.id), no_bg_color=False)
             self.remove_button.grid(row=i, column=1, padx=5, pady=10, sticky="ew")
 
     def add_file(self, submission):
@@ -70,10 +70,10 @@ class EvaluationView(DashboardFormView):
         self.files_frame.grid_columnconfigure(0, weight=1)
 
         for i, submission in enumerate(self.files):
-            self.submission_button = create_small_button(self.files_frame, text=submission.file_name, command=None, state="disabled")
+            self.submission_button = SmallButton(self.files_frame, text=submission.file_name, command=None, state="disabled")
             self.submission_button.grid(row=i, column=0, padx=(20, 5), pady=10, sticky="ew")
 
-            self.remove_file_button = create_remove_button(self.files_frame, command=partial(self.remove_file, submission), no_bg_color=False)
+            self.remove_file_button = RemoveButton(self.files_frame, command=partial(self.remove_file, submission), no_bg_color=False)
             self.remove_file_button.grid(row=i, column=2, padx=5, pady=10, sticky="ew")
 
     def build_new_evaluation(self):
@@ -87,7 +87,7 @@ class EvaluationView(DashboardFormView):
         self.evaluation_name = ctk.CTkLabel(self.text_frame, text="Nova avaliação", font=ctk.CTkFont(size=26))
         self.evaluation_name.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
-        self.evaluation_new_file = create_button(self.text_frame, text="Adicionar arquivo", command=self.add_new_file)
+        self.evaluation_new_file = CustomButton(self.text_frame, text="Adicionar arquivo", command=self.add_new_file)
         self.evaluation_new_file.grid(row=0, column=1, padx=20, pady=10, sticky="nw")
 
         self.evaluation_name_entry = ctk.CTkEntry(self.upper_frame, placeholder_text="Nome da nova avaliação", font=ctk.CTkFont(size=16), height=45)
@@ -113,10 +113,10 @@ class EvaluationView(DashboardFormView):
         self.bottom_frame = ctk.CTkFrame(self.main_frame)
         self.bottom_frame.grid(row=99, column=0, pady=(0, 80), sticky="nsew")
 
-        self.back_button = create_button(self.bottom_frame, text="Voltar", command=self.back)
+        self.back_button = CustomButton(self.bottom_frame, text="Voltar", command=self.back)
         self.back_button.grid(row=0, column=0, padx=20, pady=10, sticky = "ws")
 
-        self.start_button = create_button(self.bottom_frame, text="Iniciar Avaliação", command=self.on_start)
+        self.start_button = CustomButton(self.bottom_frame, text="Iniciar Avaliação", command=self.on_start)
         self.start_button.grid(row=0, column=1, padx=20, pady=10, sticky = "ws")
 
     def back(self):

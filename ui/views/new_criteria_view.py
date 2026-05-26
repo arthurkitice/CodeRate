@@ -2,7 +2,7 @@ import customtkinter as ctk
 from services import CriteriaService
 from database import get_db
 from ui.views.dashboard_form_view import DashboardFormView
-from ui.widgets import create_button
+from ui.widgets import CustomButton
 
 class NewCriteriaView(DashboardFormView):
     def __init__(self, parent, on_criteria_created, on_back, criteria_id=None):
@@ -51,10 +51,10 @@ class NewCriteriaView(DashboardFormView):
         self.button_frame.grid(row=4, column=0, sticky="nsew")
 
         # Botões
-        self.create_button = create_button(self.button_frame, text=self.get_button_text(), command=self.save_criteria)
+        self.create_button = CustomButton(self.button_frame, text=self.get_button_text(), command=self.save_criteria)
         self.create_button.grid(row=0, column=0, padx=20, pady=30, sticky="ew")
 
-        self.back_button = create_button(self.button_frame, text="Voltar", command=self.back)
+        self.back_button = CustomButton(self.button_frame, text="Voltar", command=self.back)
         self.back_button.grid(row=0, column=1, padx=20, pady=30, sticky="ew")
 
     def get_subtitle(self):
