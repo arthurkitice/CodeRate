@@ -9,12 +9,15 @@ class ResultsView(DashboardFormView):
         self.on_back = on_back
         self.empty = False
 
-        # Dados fictícios para teste (Substitua pela busca real do seu SubmissionService futuramente)
-        self.submissions = [
-            {"id": 1, "file_name": "lista-1.zip", "score": 8.5, "feedback": "Código bem estruturado. Boa separação de funções e tratamento de exceções adequado.", "similarity": "85% de semelhança com exercicio2.py"},
-            {"id": 2, "file_name": "exercicio2.py", "score": 4.0, "feedback": "O algoritmo está incompleto. Faltou implementar a lógica de persistência no banco.", "similarity": "85% de semelhança com lista-1.zip"},
-            {"id": 3, "file_name": "main.py", "score": 10.0, "feedback": "Excelente trabalho. Código limpo, bem documentado e seguindo os padrões PEP 8.", "similarity": None},
-        ]
+        # Substituição definitiva dos dados fictícios pela busca real no banco
+        from services.submission_service import SubmissionService
+        self.submission_service = SubmissionService()
+        
+        # Recupera as submissões reais associadas à avaliação
+        db_submissions = self.submission_service.list_submissions_by_evaluation(self.evaluation_id)
+        
+        # Converte os DTOs em dicionários usando o model_dump do Pydantic v2 para manter compatibilidade com sua view
+        self.submissions = [sub.model_dump() for sub in db_submissions]
         
         super().__init__(parent)
         self.pack(padx=50, pady=50)

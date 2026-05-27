@@ -8,8 +8,6 @@ class EvaluationDTO(BaseModel):
     criteria_id: int
     name: str
     date: datetime
-    submission_amount: int
-    avg_score: float
 
     @classmethod
     def from_entity(cls, evaluation: Evaluation) -> "EvaluationDTO":
@@ -25,8 +23,6 @@ class EvaluationWithSubmissionsDTO(BaseModel):
     criteria_id: int
     name: str
     date: datetime
-    submission_amount: int
-    avg_score: float
     submissions: list[SubmissionDTO]
 
     @classmethod

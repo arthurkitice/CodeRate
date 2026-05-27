@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime, String
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, String
 from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
 from database import Base
@@ -8,7 +8,7 @@ class Evaluation(Base):
 
     id = Column(Integer, primary_key=True)
     criteria_id = Column(Integer, ForeignKey("criteria.id", ondelete="CASCADE"))
-    name = String
+    name = Column(String)
     date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     criteria = relationship("Criteria", back_populates="evaluations")

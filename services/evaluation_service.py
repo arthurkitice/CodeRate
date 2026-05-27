@@ -7,11 +7,10 @@ class EvaluationService:
     def __init__(self):
         self.repository = EvaluationRepository()
 
-    def create_evaluation(self, criteria_id: int, submission_amount: int = 0, avg_score: float = 0.0) -> EvaluationDTO:
+    def create_evaluation(self, criteria_id: int, name: str) -> EvaluationDTO:
         evaluation = Evaluation(
             criteria_id=criteria_id, 
-            submission_amount=submission_amount, 
-            avg_score=avg_score
+            name=name
         )
         with get_db() as db:
             self.repository.create(db, evaluation)
@@ -36,16 +35,14 @@ class EvaluationService:
                 return None
             return EvaluationWithSubmissionsDTO.from_entity(evaluation)
 
-    def update_evaluation(self, evaluation_id: int, submission_amount: int = None, avg_score: float = None) -> EvaluationDTO | None:
+    def update_evaluation(self, evaluation_id: int, name: str = None) -> EvaluationDTO | None:
         with get_db() as db:
             evaluation = self.repository.get_by_id(db, evaluation_id)
             if not evaluation:
                 return None
             
-            if submission_amount is not None:
-                evaluation.submission_amount = submission_amount
-            if avg_score is not None:
-                evaluation.avg_score = avg_score
+            if name is not None:
+                evaluation.name = name
                 
             updated = self.repository.update(db, evaluation)
             return EvaluationDTO.from_entity(updated)

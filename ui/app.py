@@ -66,23 +66,26 @@ class App(ctk.CTk):
                     on_criteria_edit=lambda criteria_id: self.show_view("edit_criteria", criteria_id=criteria_id, all_criteria=True),
                     on_back=self.dashboard
                 )
+            if view_name == "settings":
+                self.current_view = SettingsView(
+                    self.container,
+                    on_back=self.dashboard
+                )
             if view_name == "start_evaluation":
                 criteria_id = kwargs.get("criteria_id")
                 self.current_view = EvaluationView(
                     self.container,
                     criteria_id=criteria_id,
                     on_back=self.dashboard,
-                    on_start=partial(self.show_view, "results")
-                )
-            if view_name == "settings":
-                self.current_view = SettingsView(
-                    self.container,
-                    on_back=self.dashboard
+                    # Mudamos para uma lambda que recebe o ID gerado dinamicamente pela IA
+                    on_start=lambda eval_id: self.show_view("results", evaluation_id=eval_id)
                 )
             if view_name == "results":
+                # Captura o ID real passado pela tela anterior; usa 10 como fallback seguro
+                eval_id = kwargs.get("evaluation_id", 10)
                 self.current_view = ResultsView(
                     self.container,
-                    evaluation_id=10,
+                    evaluation_id=eval_id,
                     on_back=self.dashboard
                 )
                 
