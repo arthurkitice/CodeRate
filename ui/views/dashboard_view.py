@@ -10,7 +10,8 @@ class DashboardView(DashboardFormView):
             on_criteria_create, 
             on_criteria_edit, 
             on_all_criteria, 
-            on_start_evaluation
+            on_start_evaluation,
+            on_settings
         ):
 
         self.criteria_service = CriteriaService()
@@ -18,7 +19,9 @@ class DashboardView(DashboardFormView):
         self.on_criteria_edit = on_criteria_edit
         self.on_all_criteria = on_all_criteria
         self.on_start_evaluation = on_start_evaluation
+        self.on_settings = on_settings
         super().__init__(parent)
+        self.pack(padx=50, pady=50)
 
     def _gen_criteria_list(self):
         criteria = self.criteria_service.list_criteria()
@@ -48,6 +51,9 @@ class DashboardView(DashboardFormView):
 
         self.list_criteria_button = CustomButton(self.button_frame, text="Todos os Critérios", command= self.on_all_criteria)
         self.list_criteria_button.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
+
+        self.settings_button = CustomButton(self.button_frame, text="Configurações", command= self.on_settings)
+        self.settings_button.grid(row=1, column=2, padx=20, pady=10, sticky="ew")
 
         self._gen_criteria_buttons()
 

@@ -26,3 +26,4 @@ class SubmissionDTO(BaseModel):
 class TempSubmissionDTO(BaseModel):
     file_name: str
     file_path: str
+    content: str | None = None

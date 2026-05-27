@@ -4,6 +4,8 @@ from ui.views.new_criteria_view import NewCriteriaView
 from ui.views.edit_criteria_view import EditCriteriaView
 from ui.views.all_criteria_view import AllCriteriaView
 from ui.views.evaluation_view import EvaluationView
+from ui.views.settings_view import SettingsView
+from ui.views.results_view import ResultsView
 from functools import partial
 
 ctk.set_appearance_mode("system")
@@ -33,10 +35,11 @@ class App(ctk.CTk):
             if view_name == "dashboard":
                 self.current_view = DashboardView(
                     self.container,
-                    on_criteria_create=lambda: self.show_view("new_criteria"),
+                    on_criteria_create=partial(self.show_view, "new_criteria"),
                     on_criteria_edit=lambda criteria_id: self.show_view("edit_criteria", criteria_id=criteria_id),
-                    on_all_criteria=lambda: self.show_view("all_criteria"),
-                    on_start_evaluation=lambda criteria_id: self.show_view("start_evaluation", criteria_id=criteria_id)
+                    on_all_criteria=partial(self.show_view, "all_criteria"),
+                    on_start_evaluation=lambda criteria_id: self.show_view("start_evaluation", criteria_id=criteria_id),
+                    on_settings = partial(self.show_view, "settings"),
                 )
             if view_name == "new_criteria":
                 self.current_view = NewCriteriaView(
@@ -68,6 +71,18 @@ class App(ctk.CTk):
                 self.current_view = EvaluationView(
                     self.container,
                     criteria_id=criteria_id,
+                    on_back=self.dashboard,
+                    on_start=partial(self.show_view, "results")
+                )
+            if view_name == "settings":
+                self.current_view = SettingsView(
+                    self.container,
+                    on_back=self.dashboard
+                )
+            if view_name == "results":
+                self.current_view = ResultsView(
+                    self.container,
+                    evaluation_id=10,
                     on_back=self.dashboard
                 )
                 
