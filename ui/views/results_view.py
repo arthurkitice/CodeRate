@@ -1,209 +1,207 @@
-import customtkinter as ctk
-from ui.views.dashboard_form_view import DashboardFormView
-from ui.widgets import CustomButton, ResultButton, ScoreButton
-from functools import partial
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
+    QLabel, QScrollArea, QFrame, QPlainTextEdit, 
+    QStackedWidget, QInputDialog, QMessageBox
+)
+from PySide6.QtCore import Qt
+from ui.widgets import CustomButton, ResultCard, ScoreCard # Suas classes refatoradas
+from services.submission_service import SubmissionService
 
-class ResultsView(DashboardFormView):
-    def __init__(self, parent, evaluation_id, on_back):
+class ResultsView(QWidget):
+    def __init__(self, evaluation_id, on_back, on_view_file, parent=None):
+        super().__init__(parent)
         self.evaluation_id = evaluation_id
         self.on_back = on_back
-        self.empty = False
+        self.on_view_file = on_view_file # Nova rota injetada (SPA)
 
-        # Substituição definitiva dos dados fictícios pela busca real no banco
-        from services.submission_service import SubmissionService
         self.submission_service = SubmissionService()
-        
-        # Recupera as submissões reais associadas à avaliação
         db_submissions = self.submission_service.list_submissions_by_evaluation(self.evaluation_id)
-        
-        # Converte os DTOs em dicionários usando o model_dump do Pydantic v2 para manter compatibilidade com sua view
         self.submissions = [sub.model_dump() for sub in db_submissions]
         
-        super().__init__(parent)
-        self.pack(padx=50, pady=50)
+        # Dicionário para guardar a referência das linhas e aplicar efeitos visuais
+        self.row_frames = {}
 
-    def build_ui(self):
-        # Configuração da Grid Principal da View (2 Colunas principais)
-        self.grid_columnconfigure(0, weight=5, uniform="split") # Lado Esquerdo (Mestre)
-        self.grid_columnconfigure(1, weight=4, uniform="split") # Lado Direito (Detalhes)
-        self.grid_rowconfigure(2, weight=1)
-
-        # Títulos da View
-        self.add_title(self)
-        self.add_heading(self, f"Resultados da Avaliação #{self.evaluation_id}")
-
-        # --- PAINEL ESQUERDO: LISTA MESTRE ---
-        self.master_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.master_frame.grid(row=2, column=0, sticky="nsew", padx=(20, 10), pady=10)
-        self.master_frame.grid_columnconfigure(0, weight=1)
-        self.master_frame.grid_rowconfigure(1, weight=1)
-
-        # Cabeçalhos da tabela interna
-        self.headers_frame = ctk.CTkFrame(self.master_frame, fg_color="transparent", height=30)
-        self.headers_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=(0, 5))
-        self.headers_frame.grid_columnconfigure(0, weight=1) # Arquivos
-        self.headers_frame.grid_columnconfigure(1, weight=0) # Notas
-        
-        lbl_arquivos = ctk.CTkLabel(self.headers_frame, text="Arquivos", font=ctk.CTkFont(size=20, weight="bold"))
-        lbl_arquivos.grid(row=0, column=0, sticky="w", padx=5)
-
-        # 3. A SOLUÇÃO: O Label Notas recebe o width=120 (mesmo tamanho do ScoreButton), anchor="w" (para o texto ficar na esquerda) e padx=5
-        lbl_notas = ctk.CTkLabel(self.headers_frame, text="Notas", font=ctk.CTkFont(size=20, weight="bold"), width=120, anchor="w")
-        lbl_notas.grid(row=0, column=1, sticky="w", padx=5)
-
-        self.scrollable_list = ctk.CTkScrollableFrame(self.master_frame, fg_color="transparent")
-        self.scrollable_list.grid(row=1, column=0, sticky="nsew")
-        
-        # 2. Copiamos a exata mesma geometria do cabeçalho para dentro do scroll
-        self.scrollable_list.grid_columnconfigure(0, weight=1)
-        self.scrollable_list.grid_columnconfigure(1, weight=0)
-
-        # 3. Colocamos as suas colunas de arquivos e notas DENTRO do scroll
-        self.file_frame = ctk.CTkFrame(self.scrollable_list, fg_color="transparent")
-        self.file_frame.grid(row=0, column=0, sticky="nsew", pady=5, padx=5)
-        self.file_frame.grid_columnconfigure(0, weight=1)
-
-        self.score_frame = ctk.CTkFrame(self.scrollable_list, fg_color="transparent")
-        self.score_frame.grid(row=0, column=1, sticky="nsew", pady=5, padx=5)
-        
-        # ------------------------------------------------
-
-        self.row_frames = {} 
+        self.build_ui()
         self.build_submissions_list()
 
-        # --- PAINEL DIREITO: DETALHES ---
-        self.detail_frame = ctk.CTkFrame(self)
-        self.detail_frame.grid(row=2, column=1, sticky="nsew", padx=(10, 20), pady=10)
-        self.detail_frame.grid_columnconfigure(0, weight=1)
-        self.detail_frame.grid_rowconfigure(1, weight=1)
+    def build_ui(self):
+        layout_principal = QVBoxLayout(self)
+        layout_principal.setContentsMargins(40, 40, 40, 40)
+        layout_principal.setSpacing(20)
 
-        # Título dinâmico do painel de detalhes
-        self.detail_title = ctk.CTkLabel(self.detail_frame, text="Justificativa", font=ctk.CTkFont(size=20, weight="bold"))
-        self.detail_title.grid(row=0, column=0, sticky="w")
-
-        # Caixa de texto para exibir o feedback ou similaridades (Inicia desativada)
-        self.detail_text = ctk.CTkTextbox(self.detail_frame, font=ctk.CTkFont(size=14), border_width=1)
-        self.detail_text.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        # --- Títulos ---
+        lbl_titulo = QLabel("CodeRate")
+        lbl_titulo.setObjectName("titulo_app")
         
-        self.empty_frame = ctk.CTkFrame(self.detail_frame, fg_color="#212435")
-        self.empty_frame.grid_columnconfigure(0, weight=1)
-        self.empty_frame.grid_columnconfigure(99, weight=1)
-        self.empty_frame.grid_rowconfigure(0, weight=1)
-        self.empty_frame.grid_rowconfigure(99, weight=1)
-        text = "Selecione o ícone de visualização (👁️)\nou de alerta (!) em um arquivo\npara exibir os detalhes aqui."
-        self.empty_label = ctk.CTkLabel(self.empty_frame, text=text, font=ctk.CTkFont(size=16), text_color="grey")
-        self.empty_label.grid(row=1, column=1, sticky="nsew")
+        lbl_subtitulo = QLabel(f"Resultados da Avaliação #{self.evaluation_id}")
+        lbl_subtitulo.setObjectName("subtitulo_app")
 
-        # Estado Inicial Vazio (Empty State)
-        self.show_empty_state()
+        layout_principal.addWidget(lbl_titulo)
+        layout_principal.addWidget(lbl_subtitulo)
 
-        # --- BOTÃO VOLTAR ---
-        self.bottom_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.bottom_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(10, 20))
+        # --- Grid Central (2 Colunas) ---
+        grid_painel = QGridLayout()
+        grid_painel.setSpacing(30)
+        grid_painel.setColumnStretch(0, 5) # Coluna Esquerda (Arquivos) é maior
+        grid_painel.setColumnStretch(1, 4) # Coluna Direita (Detalhes)
+
+        # ==========================================
+        # PAINEL ESQUERDO: LISTA MESTRE
+        # ==========================================
+        painel_esq = QWidget()
+        layout_esq = QVBoxLayout(painel_esq)
+        layout_esq.setContentsMargins(0, 0, 0, 0)
+
+        # Cabeçalhos
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(10, 0, 10, 5)
         
-        self.back_button = CustomButton(self.bottom_frame, text="Voltar", command=self.on_back)
-        self.back_button.pack(side="left", padx=20)
+        lbl_arquivos = QLabel("Arquivos")
+        lbl_arquivos.setObjectName("tabela_header")
+        
+        lbl_notas = QLabel("Notas")
+        lbl_notas.setObjectName("tabela_header")
+        lbl_notas.setFixedWidth(120) # Mesmo tamanho do ScoreCard
 
+        header_layout.addWidget(lbl_arquivos, stretch=1)
+        header_layout.addWidget(lbl_notas)
+        layout_esq.addLayout(header_layout)
+
+        # Scroll da Lista
+        scroll_list = QScrollArea()
+        scroll_list.setWidgetResizable(True)
+        scroll_list.setObjectName("scroll_area")
+        
+        self.container_list = QWidget()
+        self.container_list.setObjectName("fundo_transparente")
+        self.layout_list = QVBoxLayout(self.container_list)
+        self.layout_list.setSpacing(10)
+        self.layout_list.setAlignment(Qt.AlignTop)
+        
+        scroll_list.setWidget(self.container_list)
+        layout_esq.addWidget(scroll_list)
+
+        # ==========================================
+        # PAINEL DIREITO: DETALHES (USANDO QSTACKEDWIDGET)
+        # ==========================================
+        self.painel_dir_stack = QStackedWidget()
+        
+        # Estado 1: Vazio / Instruções
+        self.empty_frame = QFrame()
+        self.empty_frame.setObjectName("empty_state_frame")
+        empty_layout = QVBoxLayout(self.empty_frame)
+        
+        lbl_empty = QLabel("Selecione o ícone de visualização (👁️)\nou de alerta (!) em um arquivo\npara exibir os detalhes aqui.")
+        lbl_empty.setObjectName("empty_state_text")
+        lbl_empty.setAlignment(Qt.AlignCenter)
+        empty_layout.addWidget(lbl_empty)
+        
+        # Estado 2: Conteúdo
+        self.content_frame = QFrame()
+        content_layout = QVBoxLayout(self.content_frame)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(10)
+        
+        self.detail_title = QLabel("Justificativa")
+        self.detail_title.setObjectName("tabela_header")
+        
+        self.detail_text = QPlainTextEdit()
+        self.detail_text.setObjectName("detail_textbox")
+        self.detail_text.setReadOnly(True)
+        
+        content_layout.addWidget(self.detail_title)
+        content_layout.addWidget(self.detail_text)
+
+        # Adiciona os dois estados ao baralho interno
+        self.painel_dir_stack.addWidget(self.empty_frame)
+        self.painel_dir_stack.addWidget(self.content_frame)
+
+        # ==========================================
+        # MONTAGEM FINAL
+        # ==========================================
+        grid_painel.addWidget(painel_esq, 0, 0)
+        grid_painel.addWidget(self.painel_dir_stack, 0, 1)
+        layout_principal.addLayout(grid_painel, stretch=1)
+
+        # Rodapé
+        self.back_button = CustomButton("Voltar", command=self.on_back)
+        layout_principal.addWidget(self.back_button, alignment=Qt.AlignLeft)
+
+    # --- Lógica de Preenchimento ---
     def build_submissions_list(self):
-        """Preenche a lista rolável com as submissões e seus botões"""
-        for widget in self.file_frame.winfo_children():
-            widget.destroy()
-        for widget in self.score_frame.winfo_children():
-            widget.destroy()
-
-        for i, sub in enumerate(self.submissions):
-            # ALTERAÇÃO: parent mudou de self.file_frame para self (para acessar as funções da view)
-            # E adicionado submission=sub
-            lbl_name = ResultButton(self, frame=self.file_frame, text=sub["file_name"], submission=sub, font=ctk.CTkFont(size=14))
-            lbl_name.grid(row=i, column=0, sticky="we", padx=0, pady=(0, 10))
-
-            # ALTERAÇÃO: adicionado submission=sub
-            lbl_score = ScoreButton(self, self.score_frame, text=f"{sub['score']:.1f}", submission=sub)
-            lbl_score.grid(row=i, column=0, sticky="we", padx=0, pady=(0, 10))
-
-    def highlight_active_row(self, sub_id):
-        """Aplica um destaque visual na linha selecionada e remove das outras"""
-        for current_id, frame in self.row_frames.items():
-            if current_id == sub_id:
-                frame.configure(border_width=2, border_color=["#3a7ebf", "#1f538d"]) # Destaque ativo
-            else:
-                frame.configure(border_width=0)
-
-    def show_empty_state(self):
-        """Limpa o painel direito e coloca a mensagem instrucional padrão"""
-        self.detail_title.configure(text="Justificativa")
-        self.detail_text.configure(state="normal")
-        self.detail_text.delete("1.0", "end")
-        # self.detail_text.insert("50.0", "Selecione o ícone de visualização (👁️) ou de alerta (!) em um arquivo para exibir os detalhes aqui.")
-        self.toggle_empty_frame()
-        self.detail_text.configure(state="disabled")
-
-    def toggle_empty_frame(self):
-        if self.empty:
-            self.empty_frame.grid_forget()
-        else:
-            self.empty_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-        self.empty = not self.empty
+        # Limpa o layout
+        while self.layout_list.count():
+            item = self.layout_list.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
         
+        self.row_frames.clear()
+
+        for sub in self.submissions:
+            # Container da linha
+            row_widget = QWidget()
+            row_widget.setObjectName("list_row")
+            row_layout = QHBoxLayout(row_widget)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(10)
+
+            # Instancia os seus Cards customizados
+            result_card = ResultCard(sub["file_name"], sub)
+            score_card = ScoreCard(f"{sub['score']:.1f}", sub)
+
+            # Conectando os sinais do ResultCard
+            result_card.view_code_requested.connect(self.display_code)
+            result_card.view_feedback_requested.connect(self.display_feedback)
+            if hasattr(result_card, 'view_similarity_requested'):
+                result_card.view_similarity_requested.connect(self.display_similarity)
+
+            # Conectando o sinal do ScoreCard
+            score_card.edit_requested.connect(self.prompt_edit_score)
+
+            row_layout.addWidget(result_card, stretch=1)
+            row_layout.addWidget(score_card)
+
+            self.layout_list.addWidget(row_widget)
+            self.row_frames[sub["id"]] = row_widget # Salva a linha para o efeito de highlight
+
+    # --- Ações ---
     def display_feedback(self, submission):
-        """Exibe o feedback da IA no painel lateral"""
-        if self.empty:
-            self.toggle_empty_frame()
-
-        self.highlight_active_row(submission["id"])
-        self.detail_title.configure(text=f"Justificativa: {submission['file_name']}")
-        
-        self.detail_text.configure(state="normal")
-        self.detail_text.delete("1.0", "end")
-        self.detail_text.insert("1.0", submission["feedback"])
-        self.detail_text.configure(state="disabled")
+        self.painel_dir_stack.setCurrentWidget(self.content_frame)
+        self.detail_title.setText(f"Justificativa: {submission['file_name']}")
+        self.detail_text.setPlainText(submission["feedback"])
 
     def display_similarity(self, submission):
-        """Exibe o relatório de plágio/similaridade no painel lateral"""
-        if self.empty:
-            self.toggle_empty_frame()
-
-        self.highlight_active_row(submission["id"])
-        self.detail_title.configure(text=f"Similaridades: {submission['file_name']}")
+        self.painel_dir_stack.setCurrentWidget(self.content_frame)
+        self.detail_title.setText(f"Similaridades: {submission['file_name']}")
         
-        self.detail_text.configure(state="normal")
-        self.detail_text.delete("1.0", "end")
-        self.detail_text.insert("1.0", f"ALERTA DE ALTA TAXA DE SEMELHANÇA:\n\n{submission['similarity']}\n\nO sistema identificou uma correspondência estrutural atípica entre os arquivos acima. Cabe ao docente analisar se ocorreu plágio ou colaboração indevida.")
-        self.detail_text.configure(state="disabled")
+        texto_alerta = (
+            "ALERTA DE ALTA TAXA DE SEMELHANÇA:\n\n"
+            f"{submission.get('similarity', '')}\n\n"
+            "O sistema identificou uma correspondência estrutural atípica entre os arquivos acima. "
+            "Cabe ao docente analisar se ocorreu plágio ou colaboração indevida."
+        )
+        self.detail_text.setPlainText(texto_alerta)
 
     def prompt_edit_score(self, submission):
-        """Abre uma caixa de diálogo local para alterar a nota manualmente"""
-        dialog = ctk.CTkInputDialog(
-            text=f"Altere a nota de {submission['file_name']}:", 
-            title="Editar Nota"
+        # A janela nativa do Qt para números decimais
+        novo_valor, ok_pressionado = QInputDialog.getDouble(
+            self, 
+            "Editar Nota", 
+            f"Altere a nota de {submission['file_name']}:", 
+            submission["score"], # Valor atual
+            0.0, # Mínimo
+            10.0, # Máximo
+            1 # Casas decimais
         )
-        # O tkraise garante que o input apareça na frente do modal central
-        dialog.tkraise()
         
-        input_value = dialog.get_input()
-        
-        if input_value is not None:
-            try:
-                new_score = float(input_value)
-                if 0.0 <= new_score <= 10.0:
-                    # Atualiza o dado local na lista
-                    submission["score"] = new_score
-                    # Reconstrói a lista visual com o valor novo
-                    self.build_submissions_list()
-                    # Mantém o destaque na linha que acabou de ser editada
-                    self.highlight_active_row(submission["id"])
-                else:
-                    print("A nota deve ser entre 0 e 10.")
-            except ValueError:
-                print("Insira um número decimal válido.")
+        if ok_pressionado:
+            # O PySide6 já faz a validação! O usuário não consegue digitar letras.
+            submission["score"] = novo_valor
+            self.build_submissions_list()
+            
+            # TODO: Atualizar no banco de dados via submission_service
 
     def display_code(self, submission):
-        """Abre o código fonte da submissão na tela."""
-        from ui.views.file_view import FileView # Importe no topo do arquivo se preferir
-        
-        if hasattr(self, "file_view") and self.file_view is not None:
-            self.file_view.destroy()
-
-        self.file_view = FileView(self, submission)
-        self.file_view.place(relx=0, rely=0, relwidth=1, relheight=1)
-        self.file_view.tkraise()
+        # Chama a rota centralizada em vez de tentar sobrepor a tela
+        self.on_view_file(submission)

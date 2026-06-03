@@ -50,6 +50,7 @@ class CustomButton(QPushButton):
         super().__init__(text, parent)
         self.setObjectName("custom_btn")
         self.setFixedHeight(40)
+        self.setCursor(Qt.PointingHandCursor)
         if command:
             self.clicked.connect(command)
 

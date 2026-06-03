@@ -128,13 +128,6 @@ class DashboardView(QWidget):
         # ID crucial para aplicarmos o degradê apenas no fundo, sem vazar para os cards
         self.setObjectName("janela_principal")
         
-        self.mock_criteria_db = [
-            {"id": 6, "name": "Critério 6", "desc": "Descrição do critério 6"},
-            {"id": 5, "name": "Critério 5", "desc": "Descrição do critério 5"},
-            {"id": 4, "name": "Critério 4", "desc": "Descrição do critério 4"},
-            {"id": 3, "name": "Critério 3", "desc": "Descrição do critério 3"}
-        ]
-
         self.build_ui()
         self.load_criteria()
 

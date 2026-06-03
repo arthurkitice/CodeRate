@@ -1,47 +1,70 @@
-from database import get_db
-import customtkinter as ctk
-from services import EvaluationService, SubmissionService
-from ui.views.dashboard_form_view import DashboardFormView
-from ui.widgets import SmallButton, EditButton, RemoveButton, CustomButton
-from functools import partial
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPlainTextEdit
+from PySide6.QtGui import QFont
+from ui.widgets import CustomButton # Seu botão já refatorado
 
-class FileView(DashboardFormView):
-    def __init__(self, parent, submission, on_back = None):
+class FileView(QWidget):
+    def __init__(self, submission, on_back=None, parent=None):
+        super().__init__(parent)
         self.submission = submission
         self.on_back = on_back
-        super().__init__(parent)
+
+        # Opcional: Se esta tela for funcionar como um overlay (flutuante) 
+        # bloqueando a tela de trás, esta flag escurece o fundo automaticamente
+        # self.setAttribute(Qt.WA_StyledBackground, True)
+        # self.setObjectName("file_view_overlay")
+
+        self.build_ui()
 
     def build_ui(self):
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        layout_principal = QVBoxLayout(self)
+        layout_principal.setContentsMargins(80, 40, 80, 40)
+        layout_principal.setSpacing(20)
 
-        self.main_frame = ctk.CTkFrame(self)
-        self.main_frame.grid(row=0, column=0, padx=80, sticky="nsew")
+        # --- Cabeçalho ---
+        lbl_titulo = QLabel("CodeRate")
+        lbl_titulo.setObjectName("titulo_app")
+        
+        # Aproveitando o estilo de subtítulo para o nome do arquivo
+        self.file_label = QLabel(self.submission.file_name)
+        self.file_label.setObjectName("subtitulo_app") 
 
-        self.add_title(frame=self.main_frame)
+        # --- Caixa de Código (QPlainTextEdit) ---
+        self.textbox = QPlainTextEdit()
+        self.textbox.setObjectName("code_viewer")
+        
+        # setReadOnly permite que o usuário selecione e copie o código, 
+        # mas impede que ele digite ou apague. 
+        # NÃO use setEnabled(False), pois isso bloqueia o scroll e deixa o texto cinza.
+        self.textbox.setReadOnly(True)
 
-        self.main_frame.grid_columnconfigure((0, 1), weight=1, uniform="main")
-        self.main_frame.grid_rowconfigure(2, weight=1, uniform="main")
+        # Configurando a fonte Consolas (Monoespaçada)
+        fonte_codigo = QFont("Consolas", 11)
+        fonte_codigo.setStyleHint(QFont.Monospace)
+        self.textbox.setFont(fonte_codigo)
 
-        self.file_label = ctk.CTkLabel(self.main_frame, text=self.submission.file_name, font=ctk.CTkFont(size=20, weight="bold"))
-        self.file_label.grid(row=1, column=0, padx=20, pady=10, sticky="w")
-
-        conteudo_bruto = self.submission.content if self.submission.content else "Conteúdo não disponível."
+        # Formatando e inserindo o conteúdo
+        conteudo_bruto = self.submission.content if getattr(self.submission, 'content', None) else "Conteúdo não disponível."
         conteudo_formatado = conteudo_bruto.replace('\t', '    ')
-        fonte_codigo = ctk.CTkFont(family="Consolas", size=15)
-        self.textbox = ctk.CTkTextbox(self.main_frame, border_width=2, font=fonte_codigo)
-        self.textbox.grid(row=2, column=0, columnspan=3, padx=20, pady=(0, 10), sticky="nsew")
-        self.textbox.insert("0.0", conteudo_formatado)
-        self.textbox.configure(state="disabled")
+        
+        # Em vez de inserir em "0.0", o Qt usa setPlainText para repor tudo
+        self.textbox.setPlainText(conteudo_formatado)
 
-        self.bottom_frame = ctk.CTkFrame(self.main_frame)
-        self.bottom_frame.grid(row=99, column=0, pady=(0, 80), sticky="nsew")
+        # --- Rodapé ---
+        layout_rodape = QHBoxLayout()
+        self.back_button = CustomButton("Voltar", command=self.back)
+        
+        layout_rodape.addWidget(self.back_button)
+        layout_rodape.addStretch() # Empurra o botão para a esquerda
 
-        self.back_button = CustomButton(self.bottom_frame, text="Voltar", command=self.back)
-        self.back_button.grid(row=0, column=0, padx=20, pady=10, sticky = "ws")
+        # --- Montagem Final ---
+        layout_principal.addWidget(lbl_titulo)
+        layout_principal.addWidget(self.file_label)
+        layout_principal.addWidget(self.textbox, stretch=1) # stretch=1 faz a caixa ocupar todo o espaço vertical
+        layout_principal.addLayout(layout_rodape)
 
     def back(self):
         if self.on_back:
             self.on_back()
         else:
-            self.destroy()
+            # deleteLater é o equivalente PySide6 ao destroy() do Tkinter
+            self.deleteLater()

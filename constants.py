@@ -175,4 +175,81 @@ ESTILO_GLOBAL = """
     QWidget#fundo_transparente QWidget {
         background-color: transparent;
     }
+    QPlainTextEdit#code_viewer {
+        /* Um fundo um pouco mais escuro para contrastar com o degradê da janela */
+        background-color: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(180, 155, 230, 0.15);
+        border-radius: 10px;
+        padding: 15px;
+        
+        /* Cor da fonte do código */
+        color: #e2e8f0; 
+        
+        /* O tamanho e a família (Consolas) já foram definidos no Python 
+           usando QFont para garantir o espaçamento correto das letras, 
+           mas definimos a altura da linha aqui se necessário */
+    }
+
+    /* Opcional: Se for usar a tela como Overlay flutuante */
+    QWidget#file_view_overlay {
+        background-color: rgba(15, 7, 30, 0.95); /* Roxo super escuro e translúcido */
+    }
+    /* ======================================= */
+    /* TELA DE CARREGAMENTO (LoadingView)      */
+    /* ======================================= */
+
+    QLabel#loading_title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ffffff;
+    }
+
+    QLabel#loading_status {
+        font-size: 14px;
+        color: #9e91b5;
+    }
+
+    /* A Borda da Barra de Progresso */
+    QProgressBar#loading_progress {
+        background-color: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(180, 155, 230, 0.1);
+        border-radius: 6px;
+        min-height: 12px;
+        max-height: 12px;
+    }
+
+    /* O Preenchimento (A parte que anda) */
+    QProgressBar#loading_progress::chunk {
+        background-color: #6366f1; /* Um roxo vibrante ou azul */
+        border-radius: 5px;
+    }
+    QLabel#tabela_header {
+        font-size: 18px;
+        font-weight: bold;
+        color: #ffffff;
+    }
+
+    /* O Painel de "Estado Vazio" */
+    QFrame#empty_state_frame {
+        background-color: rgba(180, 155, 230, 0.03);
+        border: 2px dashed rgba(180, 155, 230, 0.2);
+        border-radius: 15px;
+    }
+
+    QLabel#empty_state_text {
+        color: #7a6e96;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    /* A Caixa de Texto do Feedback */
+    QPlainTextEdit#detail_textbox {
+        background-color: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(180, 155, 230, 0.15);
+        border-radius: 10px;
+        padding: 15px;
+        color: #e2e8f0;
+        font-size: 14px;
+        line-height: 1.4;
+    }
 """

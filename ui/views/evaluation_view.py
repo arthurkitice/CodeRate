@@ -4,91 +4,26 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
     QLabel, QScrollArea, QFrame, QMessageBox
 )
-from PySide6.QtCore import Qt, Signal, QThread
+from PySide6.QtCore import Qt, Signal, QThread, QSize
+from PySide6.QtGui import QIcon
 from ui.widgets import CustomButton, CustomEntry, SmallButton # Presumindo seus novos widgets
 from services import EvaluationService, SubmissionService
 from services import CriteriaService
 from services import AIService
 
-# Importações fictícias baseadas no seu código
-# from ui.views.file_view import FileView
-# from ui.views.loading_view import LoadingView
-
-# ==========================================
-# 1. A Classe da Thread (O Trabalhador em Background)
-# ==========================================
-class AIEvaluationWorker(QThread):
-    # Sinais para comunicar com a interface principal de forma segura
-    progress_updated = Signal(int, str)
-    finished_success = Signal(int)
-    error_occurred = Signal(str)
-
-    def __init__(self, criteria_id, avaliacao_nome, files):
-        super().__init__()
-        self.criteria_id = criteria_id
-        self.avaliacao_nome = avaliacao_nome
-        self.files = files
-        
-        self.criteria_service = CriteriaService()
-        self.evaluation_service = EvaluationService()
-        self.submission_service = SubmissionService()
-
-    def run(self):
-        """Este método roda em um núcleo separado do processador."""
-        try:
-            ai_service = AIService()
-        except ValueError as e:
-            self.error_occurred.emit(str(e))
-            return
-
-        criteria_dto = self.criteria_service.get_criteria_by_id(self.criteria_id)
-        if not criteria_dto:
-            self.error_occurred.emit("Erro: Critério de avaliação não encontrado.")
-            return
-
-        evaluation_dto = self.evaluation_service.create_evaluation(
-            criteria_id=self.criteria_id,
-            name=self.avaliacao_nome
-        )
-
-        for i, submission in enumerate(self.files, start=1):
-            # Emite sinal para atualizar a UI (substitui o self.after)
-            self.progress_updated.emit(i, submission.file_name)
-            
-            resultado = ai_service.evaluate_code(
-                criteria_name=criteria_dto.name,
-                criteria_description=criteria_dto.description,
-                file_name=submission.file_name,
-                code_content=submission.content if submission.content else ""
-            )
-            
-            score = resultado.get("score", 0.0)
-            feedback = resultado.get("feedback", "Nenhum feedback foi gerado.")
-
-            self.submission_service.create_submission(
-                evaluation_id=evaluation_dto.id,
-                file_name=submission.file_name,
-                file_path=submission.file_path,
-                score=score,
-                feedback=feedback
-            )
-            time.sleep(5) # Simulação de delay
-
-        # Avisa a tela que terminou e passa o ID
-        self.finished_success.emit(evaluation_dto.id)
-
-
 # ==========================================
 # 2. A Tela Principal (EvaluationView)
 # ==========================================
 class EvaluationView(QWidget):
-    def __init__(self, criteria_id, on_back, on_start, parent=None):
+    def __init__(self, criteria_id, on_back, on_view_results, on_start_processing, on_view_file, parent=None):
         super().__init__(parent)
         self.evaluation_service = EvaluationService()
         self.submission_service = SubmissionService()
         self.criteria_id = criteria_id
         self.on_back = on_back
-        self.on_start = on_start
+        self.on_view_file = on_view_file
+        self.on_view_results = on_view_results
+        self.on_start_processing = on_start_processing
         self.files = []
         
         # Variáveis de controle de overlays
@@ -128,9 +63,11 @@ class EvaluationView(QWidget):
 
             # Presumindo que o seu SmallButton novo aceite um ícone de exclusão
             # ou você pode criar um widget composto aqui rapidamente
-            btn_open = SmallButton(evaluation.name, command=lambda e_id=evaluation.id: self.on_start(e_id))
+            btn_open = CustomButton(evaluation.name, command=lambda _, e_id=evaluation.id: self.on_view_results(e_id))
             
-            btn_del = CustomButton("🗑️")
+            btn_del = CustomButton("")
+            btn_del.setIcon(QIcon("ui/icons/trash_icon.png"))
+            btn_del.setIconSize(QSize(40,40))
             btn_del.setFixedSize(40, 40)
             btn_del.clicked.connect(lambda e_id=evaluation.id: self.delete_evaluation(e_id))
 
@@ -149,9 +86,11 @@ class EvaluationView(QWidget):
             row_layout = QHBoxLayout(row_widget)
             row_layout.setContentsMargins(0, 0, 0, 0)
 
-            btn_open = SmallButton(submission.file_name, command=lambda s=submission: self.on_file_click(s))
+            btn_open = CustomButton(submission.file_name, command=lambda _, s=submission: self.on_file_click(s))
             
-            btn_del = CustomButton("🗑️")
+            btn_del = CustomButton("")
+            btn_del.setIcon(QIcon("ui/icons/trash_icon.png"))
+            btn_del.setIconSize(QSize(40,40))
             btn_del.setFixedSize(40, 40)
             btn_del.clicked.connect(lambda s=submission: self.remove_file(s))
 
@@ -179,13 +118,7 @@ class EvaluationView(QWidget):
         self.build_evaluation_buttons()
 
     def on_file_click(self, submission):
-        if self.file_view is not None:
-            self.file_view.deleteLater()
-
-        # self.file_view = FileView(self, submission)
-        # self.file_view.show()
-        # self.file_view.raise_() # Equivalente ao tkraise()
-        pass
+        self.on_view_file(submission)
 
     # --- O Fluxo da IA (Multithreading) ---
     def start_evaluation_action(self):
@@ -199,42 +132,8 @@ class EvaluationView(QWidget):
             QMessageBox.warning(self, "Aviso", "Adicione pelo menos um arquivo de código para avaliar!")
             return
 
-        # self.loading_overlay = LoadingView(self, total_files=len(self.files))
-        # self.loading_overlay.show()
-        # self.loading_overlay.raise_()
-        
-        self.start_button.setEnabled(False)
-
-        # Inicia a Thread da IA
-        self.ai_worker = AIEvaluationWorker(self.criteria_id, avaliacao_nome, self.files)
-        
-        # Conecta os sinais da Thread às funções desta tela
-        self.ai_worker.progress_updated.connect(self._update_loading_progress)
-        self.ai_worker.error_occurred.connect(self._handle_ai_error)
-        self.ai_worker.finished_success.connect(self._on_evaluation_finished)
-        
-        self.ai_worker.start()
-
-    def _update_loading_progress(self, index, file_name):
-        if self.loading_overlay:
-            pass
-            # self.loading_overlay.update_progress(index, file_name)
-
-    def _handle_ai_error(self, error_msg):
-        if self.loading_overlay:
-            self.loading_overlay.deleteLater()
-            self.loading_overlay = None
-            
-        self.start_button.setEnabled(True)
-        QMessageBox.critical(self, "Erro na Avaliação", error_msg)
-
-    def _on_evaluation_finished(self, evaluation_id):
-        if self.loading_overlay:
-            self.loading_overlay.deleteLater() # Você pode implementar a animação de "finish" antes
-            self.loading_overlay = None
-            
-        self.start_button.setEnabled(True)
-        self.on_start(evaluation_id)
+        # Simplesmente passa o bastão para o app.py mudar a tela!
+        self.on_start_processing(self.criteria_id, avaliacao_nome, self.files)
 
     # --- Estrutura da Interface ---
     def build_ui(self):
