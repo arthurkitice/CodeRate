@@ -26,7 +26,7 @@ class AIService:
         O motivo da nota deve ser especificado na seção de feedback com detalhes. Caso haja alguma redução de pontos deve ficar claro o por quê.
         Caso nada contrarie o critério e não haja nenhum erro a nota 10 pode ser atribuída.
 
-        LEMBRE-SE: O código enviado é Python. Considere a sintaxe correta do Python (indentação, ausência de chaves, etc) antes de afirmar que há erros de sintaxe.
+        LEMBRE-SE: O código pode ser enviado em várias linguagens diferentes. Considere a sintaxe correta da linguagem do arquivo em questão (indentação, ausência de chaves, etc) antes de afirmar que há erros de sintaxe.
 
         [CRITÉRIO DE AVALIAÇÃO]
         Nome do Critério: {criteria_name}

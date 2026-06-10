@@ -11,7 +11,7 @@ class CriteriaService:
         return len(name) == 0 or len(name) > 50
 
     def _is_description_invalid(self, description: str) -> bool:
-        return len(description) > 1500 or len(description) == 0
+        return len(description) > 4500 or len(description) == 0
 
     def create_criteria(self, name: str, description: str) -> CriteriaDTO:
         if self._is_name_invalid(name):
