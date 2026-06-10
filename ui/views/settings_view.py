@@ -1,37 +1,69 @@
-import customtkinter as ctk
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSpacerItem
+from ui.widgets import CustomButton, CustomEntry
 from services import SettingsService
-from ui.views.dashboard_form_view import DashboardFormView
-from ui.widgets import LabelEntry, CustomButton
 
-class SettingsView(DashboardFormView):
-    def __init__(
-            self, 
-            parent,
-            on_back
-        ):
+class SettingsView(QWidget):
+    def __init__(self, on_back):
+        super().__init__()
 
-        self.settings_service = SettingsService()
         self.on_back = on_back
-        super().__init__(parent)
         
-        self.pack(padx=50, pady=50)
+        self.settings_service = SettingsService()
+        
+        self.build_ui()
 
     def build_ui(self):
-        self.grid_columnconfigure(1, weight=1)
-        # Título
-        self.add_title(self)
-        self.add_heading(self, "Configurações")
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(50, 50, 50, 50)
+        main_layout.setSpacing(30)
 
-        self.content_frame = ctk.CTkFrame(self)
-        self.content_frame.grid(row=3, column=0, padx=20, sticky="nsew")
+        lbl_titulo = QLabel("CodeRate")
+        lbl_titulo.setObjectName("titulo_app")
 
-        self.api_frame = LabelEntry(self.content_frame, "Chave API:")
-        self.api_frame.grid(row=0, column=0, sticky="nsew")
-        self.api_frame.set(self.settings_service.get_api_key())
+        lbl_subtitulo = QLabel("Configurações")
+        lbl_subtitulo.setObjectName("subtitulo_app")
 
-        self.back_button = CustomButton(self, text="Voltar", command=self.back)
-        self.back_button.grid(row=10, column=0, padx=20, pady=30, sticky="ew")
+        main_layout.addWidget(lbl_titulo)
+        main_layout.addWidget(lbl_subtitulo)
+
+        form_layout = QVBoxLayout()
+        form_layout.setSpacing(10)
+
+        # Campo Nome
+        lbl_nome = QLabel("Chave API")
+        lbl_nome.setObjectName("label_entry_title")
+        self.api_entry = CustomEntry()
+        self.api_entry.setPlaceholderText("Adicione a chave API do Google Gemini")
+
+        chave_salva = self.settings_service.get_api_key()
+        if chave_salva:
+            self.api_entry.setText(chave_salva)
+
+        form_layout.addWidget(lbl_nome)
+        form_layout.addWidget(self.api_entry)
+
+        # --- A MÁGICA DO LINK AQUI ---
+        # Usamos uma tag <a> do HTML. Você pode mudar a cor no atributo style para combinar com seu app
+        lbl_link = QLabel("<a href='https://aistudio.google.com/app/apikey' style='color: #a78bfa; text-decoration: underline;'>Não possui uma chave API? Crie uma gratuitamente aqui.</a>")
+        
+        # Essa é a função crucial: diz ao Qt para abrir o link no navegador do sistema, 
+        # em vez de tentar abrir dentro do seu próprio aplicativo
+        lbl_link.setOpenExternalLinks(True) 
+        
+        lbl_link.setObjectName("link_api") # Caso queira aplicar margens via QSS depois
+        
+        form_layout.addWidget(lbl_link)
+
+        btn_layout = QHBoxLayout()
+        self.back_button = CustomButton("Voltar", command=self.back)
+
+        btn_layout.addWidget(self.back_button)
+        btn_layout.addStretch()
+
+        main_layout.addLayout(form_layout)
+        main_layout.addStretch()
+        main_layout.addLayout(btn_layout)
 
     def back(self):
-        self.settings_service.save_api_key(self.api_frame.get())
+        self.settings_service.save_api_key(self.api_entry.text().strip())
         self.on_back()

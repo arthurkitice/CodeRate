@@ -1,8 +1,10 @@
 import os
 import subprocess
+import difflib
+from collections import defaultdict
 from pathlib import Path
 from repositories.submission_repository import SubmissionRepository
-from models import Submission
+from models import Submission, Similarity
 from dtos.submission_dto import SubmissionDTO, TempSubmissionDTO
 from database import get_db
 
@@ -54,7 +56,7 @@ class SubmissionService:
             print("Erro: Zenity não encontrado.")
             return None
 
-    def create_submission(self, evaluation_id: int, file_name: str, file_path: str, score: float, feedback: str) -> SubmissionDTO:
+    def create_submission(self, evaluation_id: int, file_name: str, file_path: str, content: str, score: float, feedback: str) -> SubmissionDTO:
         # A validação se o arquivo existe pode ser mantida por segurança
         if not os.path.exists(file_path):
             raise ValueError(f"O ficheiro não foi encontrado no sistema: {file_path}")
@@ -63,6 +65,7 @@ class SubmissionService:
             evaluation_id=evaluation_id,
             file_name=file_name,
             file_path=file_path,
+            content=content,
             score=score,
             feedback=feedback
         )
@@ -89,3 +92,76 @@ class SubmissionService:
             if not submission:
                 return False
             return self.repository.delete(db, submission)
+        
+    def update_score(self, submission_id: int, score: float) -> bool:
+        if not 0 <= score <= 10:
+            return False
+        
+        with get_db() as db:
+            submission = self.repository.get_by_id(db, submission_id)
+            if not submission:
+                raise ValueError(f"Submission com ID {submission_id} não existe no banco de dados.")
+            
+            submission.score = score
+            db.commit()
+            return True
+
+    def calculate_and_save_similarities(self, evaluation_id: int, threshold: float = 0.75):
+        """
+        Cruza os códigos de todos os alunos de uma avaliação e salva os 
+        casos de plágio no banco de dados. O(N²).
+        """
+        with get_db() as db:
+            # Puxa todos os arquivos físicos diretamente do banco (já com o 'content')
+            subs = db.query(Submission).filter(Submission.evaluation_id == evaluation_id).all()
+            
+            for i, sub_a in enumerate(subs):
+                if not sub_a.content: continue
+
+                for j, sub_b in enumerate(subs):
+                    if i == j or not sub_b.content: continue
+
+                    # Ignora quebras de linha e espaços durante a comparação
+                    # Isso pega alunos que tentam disfarçar mudando a indentação
+                    matcher = difflib.SequenceMatcher(lambda x: x in " \t\n", sub_a.content, sub_b.content)
+                    taxa = matcher.ratio()
+
+                    # Se ultrapassou o limite, cria o registro de alerta!
+                    if taxa >= threshold:
+                        alerta = Similarity(
+                            source_id=sub_a.id,
+                            target_id=sub_b.id,
+                            match_ratio=taxa
+                        )
+                        db.add(alerta)
+            
+            db.commit()
+
+    def get_all_similarities_by_evaluation(self, evaluation_id: int) -> dict[int, list[tuple[float, str]]]:
+        """
+        Retorna um dicionário mapeando o ID de uma submissão para sua lista de similaridades.
+        Resolve o problema N+1 fazendo apenas uma ida ao banco de dados.
+        """
+        with get_db() as db:
+            # 1. Descobre todos os IDs das submissões desta avaliação
+            subs = db.query(Submission.id).filter(Submission.evaluation_id == evaluation_id).all()
+            sub_ids = [sub.id for sub in subs] # Extrai apenas os números para uma lista
+
+            # Se a avaliação não tem submissões, retorna um dicionário vazio
+            if not sub_ids:
+                return {}
+
+            # 2. Busca todas as similaridades de uma vez só usando a cláusula IN (WHERE source_id IN (...))
+            # O joinedload faria o SQLAlchemy trazer a tabela alvo automaticamente, 
+            # mas como criamos a "relationship", acessar o .target_submission.file_name faz isso sob demanda.
+            sims = db.query(Similarity).filter(Similarity.source_id.in_(sub_ids)).all()
+
+            # 3. Organiza os dados em memória usando um defaultdict
+            # O defaultdict(list) cria uma lista vazia automaticamente caso a chave (source_id) ainda não exista
+            resultado = defaultdict(list)
+            
+            for s in sims:
+                resultado[s.source_id].append((s.match_ratio, s.target_submission.file_name))
+            
+            # Retorna convertendo para um dicionário padrão do Python
+            return dict(resultado)

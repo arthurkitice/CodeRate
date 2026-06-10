@@ -1,99 +1,225 @@
-from database import get_db
-import customtkinter as ctk
-from services import CriteriaService
-from ui.views.dashboard_form_view import DashboardFormView
-from ui.widgets import SmallButton, EditButton, RemoveButton, CustomButton, NORMAL_COLOR
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout,
+    QLabel, QFrame, QScrollArea, QPushButton, QStackedWidget
+)
+from PySide6.QtCore import Qt, QSize
+from ui.widgets import CustomButton
+from PySide6.QtGui import QIcon
 
-
-
-class AllCriteriaView(DashboardFormView):
-    def __init__(self, parent, on_criteria_create, on_criteria_edit, on_back):
-        self.criteria_service = CriteriaService()
+class AllCriteriaView(QWidget):
+    def __init__(self, on_criteria_create, on_criteria_edit, on_back, on_criteria_delete, on_start_evaluation, parent=None):
+        super().__init__(parent)
         self.on_criteria_create = on_criteria_create
         self.on_criteria_edit = on_criteria_edit
         self.on_back = on_back
-        super().__init__(parent)
+        self.on_criteria_delete = on_criteria_delete
+        self.on_start_evaluation = on_start_evaluation
+        self.selected_criteria_id = None
 
+        from services import CriteriaService
+        self.criteria_service = CriteriaService()
+
+        self.build_ui()
+
+    # ------------------------------------------------------------------
+    # Helpers internos
+    # ------------------------------------------------------------------
     def _list_all_criteria(self):
         criteria = self.criteria_service.list_criteria()
         return list(reversed(criteria))
 
+    def _clear_info_panel(self):
+        self.info_stack.setCurrentIndex(0)
+        self.selected_criteria_id = None
+        self.btn_avaliar.setVisible(False)
+
+    # ------------------------------------------------------------------
+    # Ações dos botões da lista
+    # ------------------------------------------------------------------
     def edit_criteria(self, criteria_id):
         self.on_criteria_edit(criteria_id=criteria_id)
 
     def delete_criteria(self, criteria_id):
         self.criteria_service.delete_criteria(criteria_id)
         self.build_criteria_buttons()
+        self.on_criteria_delete()
+        self._clear_info_panel()
 
-    def build_criteria_buttons(self, row=0, column=0):
+    def _start_evaluation(self):
+        if self.selected_criteria_id is not None:
+            self.on_start_evaluation(self.selected_criteria_id)
+
+    # ------------------------------------------------------------------
+    # Monta / reconstrói a lista de critérios
+    # ------------------------------------------------------------------
+    def build_criteria_buttons(self):
+        # Limpa o conteúdo anterior dentro do container
+        while self.list_layout.count():
+            item = self.list_layout.takeAt(0)
+            if item.widget():
+                item.widget().setParent(None)
+
         criteria_list = self._list_all_criteria()
 
-        if getattr(self, "button_frame", None):
-            self.button_frame.destroy()
+        for criterion in criteria_list:
+            row_widget = QWidget()
+            row_widget.setObjectName("fundo_transparente")
+            row_layout = QHBoxLayout(row_widget)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(6)
 
-        self.button_frame = ctk.CTkFrame(self.main_frame)
-        self.button_frame.grid(row=2, column=0, sticky="nsew")
-        self.button_frame.grid_columnconfigure(0, weight=1)
+            # Botão principal com o nome do critério
+            btn_name = QPushButton(criterion.name)
+            btn_name.setObjectName("custom_btn")
+            btn_name.setCursor(Qt.PointingHandCursor)
+            btn_name.clicked.connect(
+                lambda checked=False, c=criterion: self.build_criteria_info(c)
+            )
 
-        for i, criterion in enumerate(criteria_list):
-            self.criteria_button = SmallButton(self.button_frame, text=criterion.name, command= lambda c=criterion: self.build_criteria_info(c, 2, 1))
-            self.criteria_button.grid(row=row+i, column=column, padx=(20, 5), pady=10, sticky="ew")
+            # Botão editar
+            btn_edit = QPushButton("")
+            btn_edit.setObjectName("btn_icon")
+            btn_edit.setIcon(QIcon("ui/icons/edit_icon.png"))
+            btn_edit.setIconSize(QSize(30, 30))
+            btn_edit.setFixedSize(32, 32)
+            btn_edit.setCursor(Qt.PointingHandCursor)
+            btn_edit.setToolTip("Editar")
+            btn_edit.clicked.connect(
+                lambda checked=False, c_id=criterion.id: self.edit_criteria(c_id)
+            )
 
-            self.edit_button = EditButton(self.button_frame, command=lambda c_id=criterion.id: self.edit_criteria(c_id), no_bg_color=False)
-            self.remove_button = RemoveButton(self.button_frame, command=lambda c_id=criterion.id: self.delete_criteria(c_id), no_bg_color=False)
+            # Botão remover
+            btn_remove = QPushButton("")
+            btn_remove.setObjectName("btn_icon")
+            btn_remove.setIcon(QIcon("ui/icons/trash_icon.png"))
+            btn_remove.setIconSize(QSize(30, 30))
+            btn_remove.setFixedSize(32, 32)
+            btn_remove.setCursor(Qt.PointingHandCursor)
+            btn_remove.setToolTip("Remover")
+            btn_remove.clicked.connect(
+                lambda checked=False, c_id=criterion.id: self.delete_criteria(c_id)
+            )
 
-            self.edit_button.grid(row=row+i, column=column+1, padx=5, pady=10, sticky="ew")
-            self.remove_button.grid(row=row+i, column=column+2, padx=5, pady=10, sticky="ew")
-    
-    def build_criteria_info(self, criteria, row=2, column=1):
-        if getattr(self, "info_frame", None):
-            self.info_frame.destroy()
+            row_layout.addWidget(btn_name, stretch=1)
+            row_layout.addWidget(btn_edit)
+            row_layout.addWidget(btn_remove)
 
-        self.info_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color=NORMAL_COLOR)
-        self.info_frame.grid(row=row, column=column, sticky="nsew", padx=20, pady=10)
-        self.info_frame.grid_columnconfigure(0, weight=1)
+            self.list_layout.addWidget(row_widget)
 
-        r = 0
-        self.name_label = ctk.CTkLabel(self.info_frame, text="Nome:", font=ctk.CTkFont(size=15), justify="left", text_color="gray")
-        self.name_label.grid(row=r, column=0, padx=20, pady=10, sticky="w")
-        r+=1
+        # Empurra tudo para cima quando a lista for curta
+        self.list_layout.addStretch()
 
-        self.criteria_label = ctk.CTkLabel(self.info_frame, text=criteria.name, font=ctk.CTkFont(size=20), justify="left")
-        self.criteria_label.grid(row=r, column=0, padx=20, pady=0, sticky="w")
-        r+=1
+    # ------------------------------------------------------------------
+    # Exibe detalhes do critério selecionado no painel direito
+    # ------------------------------------------------------------------
+    def build_criteria_info(self, criteria):
+        self.selected_criteria_id = criteria.id
+        self.btn_avaliar.setVisible(True)
+        # Limpa o painel direito
+        while self.info_layout.count():
+            item = self.info_layout.takeAt(0)
+            if item.widget():
+                item.widget().setParent(None)
 
-        self.description_label = ctk.CTkLabel(self.info_frame, text="Descrição:", font=ctk.CTkFont(size=15), justify="left", text_color="gray")
-        self.description_label.grid(row=r, column=0, padx=20, pady=(40, 10), sticky="w")
-        r+=1
+        # Label "Nome:"
+        lbl_nome_header = QLabel("Nome:")
+        lbl_nome_header.setObjectName("loading_status")   # tom acinzentado
 
-        self.criteria_desc_label = ctk.CTkLabel(self.info_frame, text=criteria.description, font=ctk.CTkFont(size=20), justify="left")
-        self.criteria_desc_label.grid(row=r, column=0, padx=20, pady=0, sticky="w")
-        r+=1
+        lbl_nome = QLabel(criteria.name)
+        lbl_nome.setObjectName("result_text")
+        lbl_nome.setWordWrap(True)
 
+        # Label "Descrição:"
+        lbl_desc_header = QLabel("Descrição:")
+        lbl_desc_header.setObjectName("loading_status")
+        lbl_desc_header.setContentsMargins(0, 24, 0, 0)
 
+        lbl_desc = QLabel(criteria.description)
+        lbl_desc.setObjectName("result_text")
+        lbl_desc.setWordWrap(True)
+
+        self.info_layout.addWidget(lbl_nome_header)
+        self.info_layout.addWidget(lbl_nome)
+        self.info_layout.addWidget(lbl_desc_header)
+        self.info_layout.addWidget(lbl_desc)
+        self.info_layout.addStretch()
+
+        self.info_stack.setCurrentWidget(self.content_frame)
+
+    # ------------------------------------------------------------------
+    # Monta a UI principal
+    # ------------------------------------------------------------------
     def build_ui(self):
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        root_layout = QVBoxLayout(self)
+        root_layout.setContentsMargins(50, 50, 50, 50)
+        root_layout.setSpacing(30)
 
-        self.main_frame = ctk.CTkFrame(self)
-        self.main_frame.grid(row=0, column=0, padx=80, sticky="nsew")
+        lbl_titulo = QLabel("CodeRate")
+        lbl_titulo.setObjectName("titulo_app")
+        root_layout.addWidget(lbl_titulo)
 
-        self.add_title(frame=self.main_frame)
-        self.add_heading(frame=self.main_frame, text="Todos os critérios de avaliação", row=1)
+        lbl_heading = QLabel("Todos os critérios de avaliação")
+        lbl_heading.setObjectName("subtitulo_app")
+        root_layout.addWidget(lbl_heading)
 
-        self.main_frame.grid_columnconfigure((0, 1), weight=1, uniform="main")
-        self.main_frame.grid_rowconfigure(2, weight=1, uniform="main")
+        # --- Área de conteúdo ---
+        content_layout = QHBoxLayout()
+        content_layout.setSpacing(20)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Painel esquerdo
+        scroll_area = QScrollArea()
+        scroll_area.setObjectName("scroll_area")
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        list_container = QWidget()
+        list_container.setObjectName("fundo_transparente")
+        self.list_layout = QVBoxLayout(list_container)
+        self.list_layout.setContentsMargins(0, 0, 8, 0)
+        self.list_layout.setSpacing(8)
+
+        scroll_area.setWidget(list_container)
+        content_layout.addWidget(scroll_area, stretch=1)
+
+        # Painel direito
+        self.info_stack = QStackedWidget()
+
+        empty_frame = QFrame()
+        empty_frame.setObjectName("empty_state_frame")
+        empty_layout = QVBoxLayout(empty_frame)
+        lbl_empty = QLabel("Selecione um critério\npara visualizar\nseu conteúdo")
+        lbl_empty.setObjectName("empty_state_text")
+        lbl_empty.setAlignment(Qt.AlignCenter)
+        empty_layout.addWidget(lbl_empty)
+        empty_layout.setAlignment(lbl_empty, Qt.AlignCenter)
+
+        self.content_frame = QFrame()
+        self.content_frame.setObjectName("criteria_detail_card")
+        self.info_layout = QVBoxLayout(self.content_frame)
+        self.info_layout.setContentsMargins(20, 20, 20, 20)
+        self.info_layout.setSpacing(4)
+
+        self.info_stack.addWidget(empty_frame)
+        self.info_stack.addWidget(self.content_frame)
+
+        content_layout.addWidget(self.info_stack, stretch=1)
+
+        # Adiciona o content_layout ao root
+        root_layout.addLayout(content_layout, stretch=1)
+
+        # Botão voltar no rodapé
+        footer_layout = QHBoxLayout()
+
+        btn_voltar = CustomButton("Voltar", command=self.on_back)
+        footer_layout.addWidget(btn_voltar)
+        footer_layout.addStretch()
+
+        self.btn_avaliar = CustomButton("Iniciar Avaliação", command=self._start_evaluation)
+        self.btn_avaliar.setVisible(False)
+        footer_layout.addWidget(self.btn_avaliar)
+
+        root_layout.addLayout(footer_layout)
 
         self.build_criteria_buttons()
-
-        self.info_frame = ctk.CTkFrame(self.main_frame, corner_radius=10, fg_color=NORMAL_COLOR)
-        self.info_frame.grid(row=2, column=1, sticky="nsew", padx=20, pady=10)
-        self.info_frame.grid_columnconfigure(0, weight=1)
-
-        self.info_label = ctk.CTkLabel(self.info_frame, text="Selecione um critério\npara visualizar\nseu conteúdo", font=ctk.CTkFont(size=18), text_color="gray", justify="center")
-        self.info_label.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
-        self.info_frame.grid_rowconfigure(0, weight=1)
-
-
-        self.back_button = CustomButton(self, text="Voltar", command=self.on_back)
-        self.back_button.grid(row=99, column=0, padx=80, pady=80, sticky = "ws")
+        self._clear_info_panel()

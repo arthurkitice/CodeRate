@@ -5,6 +5,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon
 from functools import partial # Mantido caso você ainda prefira usar
+from dtos import SubmissionDTO
+from services import SubmissionService
 
 # ==========================================
 # Entradas de Texto
@@ -70,7 +72,7 @@ class SmallButton(QPushButton):
 # Cards Complexos (Substituem os antigos botões com `.place`)
 # ==========================================
 class ScoreCard(QFrame):
-    edit_requested = Signal(dict) # Emite a submission inteira
+    edit_requested = Signal(SubmissionDTO) # Emite a submission inteira
 
     def __init__(self, text, submission, parent=None):
         super().__init__(parent)
@@ -98,10 +100,9 @@ class ScoreCard(QFrame):
         self.btn_edit.clicked.connect(lambda: self.edit_requested.emit(self.submission))
 
 class ResultCard(QFrame):
-    # Sinais limpos, removendo a necessidade de passar o 'parent'
-    view_code_requested = Signal(dict)
-    view_feedback_requested = Signal(dict)
-    view_similarity_requested = Signal(dict)
+    view_code_requested = Signal(SubmissionDTO)
+    view_feedback_requested = Signal(SubmissionDTO)
+    view_similarity_requested = Signal(SubmissionDTO)
 
     def __init__(self, text, submission, parent=None):
         super().__init__(parent)
@@ -121,7 +122,7 @@ class ResultCard(QFrame):
         layout.addStretch()
 
         # Botão Alerta (Só entra se houver similaridade)
-        if self.submission.get("similarity"):
+        if self.submission.similarity:
             self.btn_alert = QPushButton("!")
             self.btn_alert.setObjectName("btn_alert")
             self.btn_alert.setFixedSize(25, 25)
@@ -141,3 +142,157 @@ class ResultCard(QFrame):
         if event.button() == Qt.LeftButton:
             self.view_code_requested.emit(self.submission)
         super().mouseReleaseEvent(event)
+
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QFrame
+from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtCore import Qt, QRegularExpression
+
+class CustomScoreDialog(QDialog):
+    def __init__(self, submission: SubmissionDTO, parent=None):
+        super().__init__(parent)
+        
+        self.submission_id = submission.id
+        
+        # Configurações de Janela Frameless
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setModal(True)
+        self.setFixedSize(350, 250) # Aumentei 20px pra caber o texto de erro
+
+        self.accepted_value = None 
+        self.build_ui(submission.file_name, submission.score)
+
+    def build_ui(self, filename, current_score):
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        container = QFrame()
+        container.setObjectName("modal_container")
+        container.setStyleSheet("""
+            QFrame#modal_container {
+                background-color: #2b2b3b;
+                border: 1px solid rgba(180, 155, 230, 0.3);
+                border-radius: 12px;
+            }
+        """)
+        
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setSpacing(10)
+
+        # --- Cabeçalho ---
+        lbl_titulo = QLabel("Editar Nota")
+        lbl_titulo.setStyleSheet("color: white; font-size: 18px; font-weight: bold;")
+        
+        lbl_desc = QLabel(f"Altere a nota de:\n{filename}")
+        lbl_desc.setStyleSheet("color: #b0b0b0; font-size: 14px;")
+
+        # --- Input com Regex (Resolve o bug do zero sumindo) ---
+        self.input_score = QLineEdit()
+        self.input_score.setText(str(current_score))
+        
+        regex = QRegularExpression(r"^[0-9]{0,2}[.,]?[0-9]{0,2}$")
+        validator = QRegularExpressionValidator(regex, self)
+        self.input_score.setValidator(validator)
+        
+        # O estilo base da caixa de texto (guardamos na classe para poder restaurar depois)
+        self.estilo_input_normal = """
+            QLineEdit {
+                background-color: rgba(0, 0, 0, 0.2);
+                border: 1px solid rgba(180, 155, 230, 0.2);
+                border-radius: 8px;
+                padding: 10px;
+                color: white;
+                font-size: 16px;
+            }
+            QLineEdit:focus { border: 1px solid rgba(180, 155, 230, 0.8); }
+        """
+        self.input_score.setStyleSheet(self.estilo_input_normal)
+        self.input_score.returnPressed.connect(self.accept_action)
+        
+        # Sempre que o usuário digitar algo, limpamos o erro (se houver)
+        self.input_score.textChanged.connect(self.esconder_aviso_erro)
+
+        # --- Mensagem de Erro Oculta ---
+        self.lbl_erro = QLabel("A nota deve estar entre 0 e 10")
+        self.lbl_erro.setStyleSheet("color: #ff4a4a; font-size: 12px; font-weight: bold;")
+        self.lbl_erro.hide() # Fica invisível por padrão
+
+        # --- Botões ---
+        btn_layout = QHBoxLayout()
+        btn_layout.setContentsMargins(0, 10, 0, 0)
+        btn_layout.setSpacing(10)
+        
+        btn_cancelar = CustomButton("Cancelar", command=self.reject_action)
+        btn_salvar = CustomButton("Salvar", command=self.accept_action)
+
+        btn_layout.addWidget(btn_cancelar)
+        btn_layout.addWidget(btn_salvar)
+
+        # --- Montagem Final ---
+        layout.addWidget(lbl_titulo)
+        layout.addWidget(lbl_desc)
+        layout.addWidget(self.input_score)
+        layout.addWidget(self.lbl_erro) # Adiciona o label oculto na estrutura
+        layout.addLayout(btn_layout)
+
+        main_layout.addWidget(container)
+
+    # ==========================================
+    # LÓGICA DE VALIDAÇÃO E ERROS
+    # ==========================================
+    def accept_action(self):
+        texto = self.input_score.text().strip().replace(',', '.')
+        
+        # Barra campos vazios ou formatos pendentes como " . "
+        if not texto or texto == '.':
+            self.mostrar_aviso_nota_invalida()
+            return
+            
+        nota_digitada = float(texto)
+        
+        # Tentamos salvar no banco direto usando a lógica que você criou
+        sucesso = SubmissionService().update_score(self.submission_id, nota_digitada)
+        
+        if sucesso:
+            self.accepted_value = nota_digitada
+            self.accept() # Fecha o modal
+        else:
+            self.mostrar_aviso_nota_invalida() # Mantém o modal aberto e xinga o usuário
+            
+    def reject_action(self):
+        self.accepted_value = None
+        self.reject()
+
+    def mostrar_aviso_nota_invalida(self):
+        """Pinta a borda de vermelho e exibe o texto de alerta"""
+        self.lbl_erro.show()
+        self.input_score.setStyleSheet("""
+            QLineEdit {
+                background-color: rgba(255, 0, 0, 0.05);
+                border: 1px solid #ff4a4a;
+                border-radius: 8px;
+                padding: 10px;
+                color: white;
+                font-size: 16px;
+            }
+        """)
+
+    def esconder_aviso_erro(self):
+        """Devolve o modal ao estado normal assim que o usuário digita um novo número"""
+        self.lbl_erro.hide()
+        self.input_score.setStyleSheet(self.estilo_input_normal)
+
+    # ==========================================
+    # ARRASTE NATIVO DA JANELA (FRAMELESS)
+    # ==========================================
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            # Protege o input de texto de ativar o arraste
+            if self.input_score.geometry().contains(event.pos()):
+                super().mousePressEvent(event)
+                return
+                
+            # Chama a API nativa do X11/Wayland (Pop!_OS) ou Windows
+            self.window().windowHandle().startSystemMove()
+            event.accept()

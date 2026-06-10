@@ -14,6 +14,7 @@ ESTILO_GLOBAL = """
         font-size: 42px;
         font-weight: bold;
         background: transparent;
+        padding-left: -2px;
     }
 
     QLabel#subtitulo_app {
@@ -128,15 +129,15 @@ ESTILO_GLOBAL = """
     /* ======================================= */
     /* BOTÃO DE ALERTA DE SIMILARIDADE         */
     /* ======================================= */
-    QPushButton#btn_alert {
+    QFrame#result_card QPushButton#btn_alert {
         background-color: #a30000;
         border: none;
         border-radius: 4px;
-        color: white;
+        color: #ffffff;
         font-weight: bold;
         font-size: 14px;
     }
-    QPushButton#btn_alert:hover {
+    QFrame#result_card QPushButton#btn_alert:hover {
         background-color: #ff3333;
     }
 
@@ -251,5 +252,101 @@ ESTILO_GLOBAL = """
         color: #e2e8f0;
         font-size: 14px;
         line-height: 1.4;
+    }
+    QPlainTextEdit#custom_textbox {
+        background-color: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(180, 155, 230, 0.2);
+        border-radius: 8px;
+        padding: 10px;
+        color: #ffffff;
+        font-size: 14px;
+    }
+    
+    QPlainTextEdit#custom_textbox:focus {
+        border: 1px solid rgba(180, 155, 230, 0.8);
+        background-color: rgba(180, 155, 230, 0.05);
+    }
+
+    /* ======================================= */
+    /* BARRA DE ROLAGEM VERTICAL               */
+    /* ======================================= */
+    
+    /* 1. A Trilha (Fundo geral da barra) */
+    QScrollBar:vertical {
+        border: none;
+        background-color: rgba(0, 0, 0, 0.1); /* Fundo bem escuro e sutil */
+        width: 10px; /* Barra fina e elegante */
+        margin: 0px 0px 0px 0px; 
+        border-radius: 5px;
+    }
+
+    /* 2. O Puxador (Handle) */
+    QScrollBar::handle:vertical {
+        background-color: rgba(180, 155, 230, 0.25); /* Roxo translúcido */
+        min-height: 30px; /* Tamanho mínimo para não sumir se houver muito texto */
+        border-radius: 5px; /* Bordas arredondadas */
+    }
+
+    /* 3. Puxador no Hover (Mouse por cima) */
+    QScrollBar::handle:vertical:hover {
+        background-color: rgba(180, 155, 230, 0.6); /* Acende o roxo */
+    }
+
+    /* 4. Puxador Pressionado (Clicando e arrastando) */
+    QScrollBar::handle:vertical:pressed {
+        background-color: rgba(180, 155, 230, 0.9); /* Roxo quase sólido */
+    }
+
+    /* 5. MATANDO AS SETINHAS (Cima e Baixo) */
+    QScrollBar::sub-line:vertical, QScrollBar::add-line:vertical {
+        height: 0px; /* Zera a altura para elas desaparecerem */
+        background: none;
+    }
+
+    /* 6. Fundo transparente ao clicar fora do puxador */
+    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+        background: none;
+    }
+
+
+    /* ======================================= */
+    /* BARRA DE ROLAGEM HORIZONTAL             */
+    /* ======================================= */
+    
+    QScrollBar:horizontal {
+        border: none;
+        background-color: rgba(0, 0, 0, 0.1);
+        height: 10px; /* A altura define a grossura aqui */
+        margin: 0px 0px 0px 0px;
+        border-radius: 5px;
+    }
+
+    QScrollBar::handle:horizontal {
+        background-color: rgba(180, 155, 230, 0.25);
+        min-width: 30px;
+        border-radius: 5px;
+    }
+
+    QScrollBar::handle:horizontal:hover {
+        background-color: rgba(180, 155, 230, 0.6);
+    }
+
+    QScrollBar::handle:horizontal:pressed {
+        background-color: rgba(180, 155, 230, 0.9);
+    }
+
+    QScrollBar::sub-line:horizontal, QScrollBar::add-line:horizontal {
+        width: 0px; 
+        background: none;
+    }
+
+    QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+        background: none;
+    }
+    QFrame#criteria_detail_card {
+        background-color: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(180, 155, 230, 0.15);
+        border-radius: 10px;
+        padding: 15px;
     }
 """

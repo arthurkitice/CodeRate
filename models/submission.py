@@ -11,7 +11,7 @@ class Submission(Base):
     
     file_name = Column(String)
     file_path = Column(String)
-    
+    content = Column(Text, nullable=False, default="")
     date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     score = Column(Float)

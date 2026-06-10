@@ -69,7 +69,7 @@ class EvaluationView(QWidget):
             btn_del.setIcon(QIcon("ui/icons/trash_icon.png"))
             btn_del.setIconSize(QSize(40,40))
             btn_del.setFixedSize(40, 40)
-            btn_del.clicked.connect(lambda e_id=evaluation.id: self.delete_evaluation(e_id))
+            btn_del.clicked.connect(lambda _, e_id=evaluation.id: self.delete_evaluation(e_id))
 
             row_layout.addWidget(btn_open, stretch=1)
             row_layout.addWidget(btn_del)
@@ -92,7 +92,7 @@ class EvaluationView(QWidget):
             btn_del.setIcon(QIcon("ui/icons/trash_icon.png"))
             btn_del.setIconSize(QSize(40,40))
             btn_del.setFixedSize(40, 40)
-            btn_del.clicked.connect(lambda s=submission: self.remove_file(s))
+            btn_del.clicked.connect(lambda _, s=submission: self.remove_file(s))
 
             row_layout.addWidget(btn_open, stretch=1)
             row_layout.addWidget(btn_del)
@@ -138,7 +138,7 @@ class EvaluationView(QWidget):
     # --- Estrutura da Interface ---
     def build_ui(self):
         layout_principal = QVBoxLayout(self)
-        layout_principal.setContentsMargins(80, 40, 80, 40)
+        layout_principal.setContentsMargins(50, 50, 50, 50)
 
         # Título Padrão
         lbl_titulo = QLabel("CodeRate")

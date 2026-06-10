@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame, QLabel, QProgressBar
 from PySide6.QtCore import Qt
 import time
+import random
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout,
     QLabel, QFrame
@@ -143,11 +144,15 @@ class AIEvaluationWorker(QThread):
                 evaluation_id=evaluation_dto.id,
                 file_name=submission.file_name,
                 file_path=submission.file_path,
+                content=submission.content,
                 score=score,
                 feedback=feedback
             )
-            time.sleep(5) # Simulação de delay
+            
+            if i < len(self.files):
+                time.sleep(4.0 + random.uniform(0.1, 1.5)) # Simulação de delay
 
+        self.submission_service.calculate_and_save_similarities(evaluation_dto.id)
         # Avisa a tela que terminou e passa o ID
         self.finished_success.emit(evaluation_dto.id)
 

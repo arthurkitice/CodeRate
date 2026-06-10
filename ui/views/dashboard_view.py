@@ -119,15 +119,24 @@ class CriterionCard(QFrame):
         super().mouseReleaseEvent(event)
 
 
+
 # ==========================================
 # 2. A Tela Principal
 # ==========================================
 class DashboardView(QWidget):
-    def __init__(self):
+    def __init__(self, on_start_evaluation, on_criteria_edit, on_new_criteria, on_settings, on_all_criteria):
         super().__init__()
         # ID crucial para aplicarmos o degradê apenas no fundo, sem vazar para os cards
         self.setObjectName("janela_principal")
         
+        self.on_start_evaluation = on_start_evaluation
+        self.on_criteria_edit = on_criteria_edit
+        self.on_new_criteria = on_new_criteria
+        self.on_settings = on_settings
+        self.on_all_criteria = on_all_criteria
+
+        self.criteria_service = CriteriaService()
+
         self.build_ui()
         self.load_criteria()
 
@@ -146,12 +155,17 @@ class DashboardView(QWidget):
         
         # Nomes adaptados à sua nova imagem
         btn_criar = CustomButton("Criar Critério")
-        btn_historico = CustomButton("Histórico de Avaliações")
+        btn_criar.clicked.connect(self.on_new_criteria)
+
         btn_todos = CustomButton("Todos os Critérios")
+        btn_todos.clicked.connect(self.on_all_criteria)
+
+        btn_settings = CustomButton("Configurações")
+        btn_settings.clicked.connect(self.on_settings)
 
         layout_botoes.addWidget(btn_criar)
-        layout_botoes.addWidget(btn_historico)
         layout_botoes.addWidget(btn_todos)
+        layout_botoes.addWidget(btn_settings)
         layout_botoes.addStretch()
 
         # --- Subtítulo ---
@@ -194,6 +208,8 @@ class DashboardView(QWidget):
         for criterion in criteria_list:
             card = CriterionCard(criterion.id, criterion.name, criterion.description)
             card.evaluation_requested.connect(self.on_start_evaluation)
+            card.edit_requested.connect(self.on_criteria_edit)
+            card.delete_requested.connect(self.delete_criteria)
             self.grid_cards.addWidget(card, linha, coluna)
             
             coluna += 1
@@ -207,5 +223,6 @@ class DashboardView(QWidget):
         spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.grid_cards.addItem(spacer, linha + 1, 0, 1, max_colunas)
 
-    def on_start_evaluation(self, criteria_id):
-        QMessageBox.information(self, "Avaliação", f"Iniciando: {criteria_id}")
+    def delete_criteria(self, criteria_id):
+        self.criteria_service.delete_criteria(criteria_id)
+        self.load_criteria()

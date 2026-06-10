@@ -1,61 +1,81 @@
-import customtkinter as ctk
-from services import CriteriaService
-from database import get_db
-from ui.views.dashboard_form_view import DashboardFormView
-from ui.widgets import CustomButton
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+    QPlainTextEdit, QMessageBox
+)
+from PySide6.QtCore import Qt
+from ui.widgets import CustomButton, CustomEntry # Importe seu CustomEntry
+from services.criteria_service import CriteriaService
 
-class NewCriteriaView(DashboardFormView):
-    def __init__(self, parent, on_criteria_created, on_back, criteria_id=None):
+class NewCriteriaView(QWidget):
+    def __init__(self, on_criteria_created, on_back, criteria_id=None, parent=None):
+        super().__init__(parent)
         self.on_criteria_created = on_criteria_created
         self.on_back = on_back
         
         self.criteria_id = criteria_id
         self.criteria_service = CriteriaService()
-        super().__init__(parent)
+        
+        self.build_ui()
 
     def build_ui(self):
-        self.add_title(self, row=1, column=1)
-        self.add_heading(self, self.get_subtitle(), row=2, column=1)
+        # O Layout vertical principal da página
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(80, 40, 80, 40)
+        main_layout.setSpacing(20)
 
-        self.grid_columnconfigure(0, weight=1, uniform="main")
-        self.grid_columnconfigure(1, weight=2, uniform="main")
-        self.grid_columnconfigure(2, weight=1, uniform="main")
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(3, weight=1)
-        self.grid_rowconfigure(99, weight=1)
+        # Cabeçalhos centralizados
+        lbl_titulo = QLabel("CodeRate")
+        lbl_titulo.setObjectName("titulo_app")
+        lbl_titulo.setAlignment(Qt.AlignCenter)
 
-        self.content_frame = ctk.CTkFrame(self)
-        self.content_frame.grid(row=3, column=1, sticky="nsew")
-        self.content_frame.grid_columnconfigure(0, weight=1)
-        self.content_frame.grid_rowconfigure(3, weight=1)
+        lbl_subtitulo = QLabel(self.get_subtitle())
+        lbl_subtitulo.setObjectName("subtitulo_app")
+        lbl_subtitulo.setAlignment(Qt.AlignCenter)
 
-        # Campos
-        row = 0
-        self.name_label = ctk.CTkLabel(self.content_frame, text="Nome", font=ctk.CTkFont(size=18))
-        self.name_label.grid(row=row, column=0, padx=20, pady=10, sticky="w")
-        row+=1
+        main_layout.addWidget(lbl_titulo)
+        main_layout.addWidget(lbl_subtitulo)
 
-        self.name_entry = ctk.CTkEntry(self.content_frame, height=40)
-        self.name_entry.grid(row=row, column=0, columnspan=3, padx=20, pady=(0, 10), sticky="ew")
-        row+=1
+        # --- A MÁGICA DA CENTRALIZAÇÃO (Pesos 1 : 2 : 1) ---
+        center_layout = QHBoxLayout()
+        center_layout.addStretch(1) # Equivalente à coluna 0 (Vazia)
 
-        self.description_label = ctk.CTkLabel(self.content_frame, text="Descrição", font=ctk.CTkFont(size=18))
-        self.description_label.grid(row=row, column=0, padx=20, pady=10, sticky="w")
-        row+=1
+        form_layout = QVBoxLayout()
+        form_layout.setSpacing(15)
 
-        self.description_entry = ctk.CTkTextbox(self.content_frame, border_width=2)
-        self.description_entry.grid(row=row, column=0, columnspan=3, padx=20, pady=(0, 10), sticky="nsew")
-        row+=1
-        
-        self.button_frame = ctk.CTkFrame(self.content_frame)
-        self.button_frame.grid(row=4, column=0, sticky="nsew")
+        # Campo Nome
+        lbl_nome = QLabel("Nome")
+        lbl_nome.setObjectName("label_entry_title")
+        self.name_entry = CustomEntry() # Mantém o estilo do seu widget
+        self.name_entry.setPlaceholderText("Digite o nome do critério")
+
+        form_layout.addWidget(lbl_nome)
+        form_layout.addWidget(self.name_entry)
+
+        # Campo Descrição (Substitui o CTkTextbox)
+        lbl_desc = QLabel("Descrição")
+        lbl_desc.setObjectName("label_entry_title")
+        self.description_entry = QPlainTextEdit()
+        self.description_entry.setPlaceholderText("Digite a descrição do critério")
+        self.description_entry.setObjectName("custom_textbox")
+
+        form_layout.addWidget(lbl_desc)
+        form_layout.addWidget(self.description_entry, stretch=1)
 
         # Botões
-        self.create_button = CustomButton(self.button_frame, text=self.get_button_text(), command=self.save_criteria)
-        self.create_button.grid(row=0, column=0, padx=20, pady=30, sticky="ew")
+        btn_layout = QHBoxLayout()
+        self.back_button = CustomButton("Voltar", command=self.back)
+        self.create_button = CustomButton(self.get_button_text(), command=self.save_criteria)
 
-        self.back_button = CustomButton(self.button_frame, text="Voltar", command=self.back)
-        self.back_button.grid(row=0, column=1, padx=20, pady=30, sticky="ew")
+        btn_layout.addWidget(self.back_button)
+        btn_layout.addWidget(self.create_button)
+
+        form_layout.addLayout(btn_layout)
+
+        # Adiciona o formulário no centro com peso 2
+        center_layout.addLayout(form_layout, 2) 
+        center_layout.addStretch(1) # Equivalente à coluna 2 (Vazia)
+
+        main_layout.addLayout(center_layout, stretch=1)
 
     def get_subtitle(self):
         return "Novo Critério"
@@ -66,9 +86,14 @@ class NewCriteriaView(DashboardFormView):
     def back(self):
         self.on_back()
 
+    def show_error(self, message):
+        # A janela de erro nativa do Qt
+        QMessageBox.critical(self, "Erro", message)
+
     def save_criteria(self):
-        name = self.name_entry.get().strip()
-        description = self.description_entry.get("0.0", "end").strip()
+        # No PySide6: QLineEdit usa .text() e QPlainTextEdit usa .toPlainText()
+        name = self.name_entry.text().strip()
+        description = self.description_entry.toPlainText().strip()
 
         if not name or not description:
             self.show_error("Erro: Preencha nome e descrição.")

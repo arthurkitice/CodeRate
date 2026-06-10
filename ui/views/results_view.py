@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QStackedWidget, QInputDialog, QMessageBox
 )
 from PySide6.QtCore import Qt
-from ui.widgets import CustomButton, ResultCard, ScoreCard # Suas classes refatoradas
+from ui.widgets import CustomButton, ResultCard, ScoreCard, CustomScoreDialog # Suas classes refatoradas
 from services.submission_service import SubmissionService
 
 class ResultsView(QWidget):
@@ -15,18 +15,39 @@ class ResultsView(QWidget):
         self.on_view_file = on_view_file # Nova rota injetada (SPA)
 
         self.submission_service = SubmissionService()
-        db_submissions = self.submission_service.list_submissions_by_evaluation(self.evaluation_id)
-        self.submissions = [sub.model_dump() for sub in db_submissions]
+        self.submissions = self.submission_service.list_submissions_by_evaluation(self.evaluation_id)
         
         # Dicionário para guardar a referência das linhas e aplicar efeitos visuais
         self.row_frames = {}
+
+        self.submissions = self.submission_service.list_submissions_by_evaluation(self.evaluation_id)
+        
+        # 1. Busca TUDO de uma única vez (Batch Fetching)
+        todas_similaridades = self.submission_service.get_all_similarities_by_evaluation(self.evaluation_id)
+
+        # 2. Distribuição na memória (Ocorre instantaneamente na RAM)
+        for sub in self.submissions:
+            # O '.get()' busca a lista de plágios daquele ID. Se o ID não existir no 
+            # dicionário (aluno não cometeu plágio), ele devolve uma lista vazia []
+            similarities = todas_similaridades.get(sub.id, [])
+            
+            if similarities:
+                texto = ""
+                
+                # O laço desempacota as tuplas da lista
+                for perc, file_name in similarities:
+                    texto += f"• {perc*100:.1f}% de semelhança estrutural com '{file_name}'\n"
+                    
+                sub.similarity = texto
+            else:
+                sub.similarity = None
 
         self.build_ui()
         self.build_submissions_list()
 
     def build_ui(self):
         layout_principal = QVBoxLayout(self)
-        layout_principal.setContentsMargins(40, 40, 40, 40)
+        layout_principal.setContentsMargins(50, 50, 50, 50)
         layout_principal.setSpacing(20)
 
         # --- Títulos ---
@@ -147,8 +168,8 @@ class ResultsView(QWidget):
             row_layout.setSpacing(10)
 
             # Instancia os seus Cards customizados
-            result_card = ResultCard(sub["file_name"], sub)
-            score_card = ScoreCard(f"{sub['score']:.1f}", sub)
+            result_card = ResultCard(sub.file_name, sub)
+            score_card = ScoreCard(f"{sub.score:.1f}", sub)
 
             # Conectando os sinais do ResultCard
             result_card.view_code_requested.connect(self.display_code)
@@ -163,44 +184,45 @@ class ResultsView(QWidget):
             row_layout.addWidget(score_card)
 
             self.layout_list.addWidget(row_widget)
-            self.row_frames[sub["id"]] = row_widget # Salva a linha para o efeito de highlight
+            self.row_frames[sub.id] = row_widget # Salva a linha para o efeito de highlight
 
     # --- Ações ---
     def display_feedback(self, submission):
         self.painel_dir_stack.setCurrentWidget(self.content_frame)
-        self.detail_title.setText(f"Justificativa: {submission['file_name']}")
-        self.detail_text.setPlainText(submission["feedback"])
+        self.detail_title.setText(f"Justificativa: {submission.file_name}")
+        self.detail_text.setPlainText(submission.feedback)
 
     def display_similarity(self, submission):
         self.painel_dir_stack.setCurrentWidget(self.content_frame)
-        self.detail_title.setText(f"Similaridades: {submission['file_name']}")
+        self.detail_title.setText(f"Similaridades: {submission.file_name}")
         
         texto_alerta = (
             "ALERTA DE ALTA TAXA DE SEMELHANÇA:\n\n"
-            f"{submission.get('similarity', '')}\n\n"
+            f"{submission.similarity}\n\n"
             "O sistema identificou uma correspondência estrutural atípica entre os arquivos acima. "
             "Cabe ao docente analisar se ocorreu plágio ou colaboração indevida."
         )
         self.detail_text.setPlainText(texto_alerta)
 
     def prompt_edit_score(self, submission):
-        # A janela nativa do Qt para números decimais
-        novo_valor, ok_pressionado = QInputDialog.getDouble(
-            self, 
-            "Editar Nota", 
-            f"Altere a nota de {submission['file_name']}:", 
-            submission["score"], # Valor atual
-            0.0, # Mínimo
-            10.0, # Máximo
-            1 # Casas decimais
-        )
+        # 1. Instancia a sua classe
+        dialog = CustomScoreDialog(submission, self)
         
-        if ok_pressionado:
-            # O PySide6 já faz a validação! O usuário não consegue digitar letras.
-            submission["score"] = novo_valor
-            self.build_submissions_list()
+        # 2. Roda o Event Loop. O código PAUSA aqui até o usuário clicar em algum botão.
+        dialog.exec()
+        
+        # 3. Lê o resultado que extraímos no accept_action
+        if dialog.accepted_value is not None:
+            novo_valor = dialog.accepted_value
             
-            # TODO: Atualizar no banco de dados via submission_service
+            # Atualiza o objeto na memória
+            submission.score = novo_valor
+            
+            # Atualiza no banco de dados 
+            self.submission_service.update_score(submission.id, submission.score)
+            
+            # Recarrega a tela
+            self.build_submissions_list()
 
     def display_code(self, submission):
         # Chama a rota centralizada em vez de tentar sobrepor a tela

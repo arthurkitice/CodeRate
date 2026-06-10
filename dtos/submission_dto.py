@@ -1,12 +1,14 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 from datetime import datetime
 from models import Submission
 
-class SubmissionDTO(BaseModel):
+@dataclass
+class SubmissionDTO:
     id: int
     evaluation_id: int
     file_name: str
     file_path: str
+    content: str
     date: datetime
     score: float
     feedback: str
@@ -18,12 +20,14 @@ class SubmissionDTO(BaseModel):
             evaluation_id=submission.evaluation_id,
             file_name=submission.file_name,
             file_path=submission.file_path,
+            content=submission.content,
             date=submission.date,
             score=submission.score,
             feedback=submission.feedback
         )
 
-class TempSubmissionDTO(BaseModel):
+@dataclass
+class TempSubmissionDTO:
     file_name: str
     file_path: str
     content: str | None = None

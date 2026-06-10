@@ -1,10 +1,10 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QMessageBox
-from .views.dashboard_view import DashboardView
-from .views.evaluation_view import EvaluationView
-from .views.file_view import FileView # Importe a tela de arquivos
-from .views.loading_view import LoadingView
-from .views.results_view import ResultsView
+from .views import (
+    DashboardView, EvaluationView,  FileView, 
+    LoadingView, ResultsView, NewCriteriaView, 
+    EditCriteriaView, SettingsView, AllCriteriaView
+)
 
 class App(QMainWindow):
     def __init__(self):
@@ -15,129 +15,129 @@ class App(QMainWindow):
 
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
-        self.views_cache = {}
-
+        self.dashboard_view = None
+        self.settings_view = None
+        self.current_dynamic_view = None
         self.show_dashboard()
 
+    def dynamic_view(func):
+        def wrapper(self, *args, **kwargs):
+            self.clear_dynamic_view()
+            function = func(self, *args, **kwargs)
+            self.stacked_widget.addWidget(self.current_dynamic_view)
+            self.stacked_widget.setCurrentWidget(self.current_dynamic_view)
+            return function
+        return wrapper
+
+    def clear_dynamic_view(self):
+       if self.current_dynamic_view is not None:
+            self.stacked_widget.removeWidget(self.current_dynamic_view)
+            self.current_dynamic_view.deleteLater()
+            self.current_dynamic_view = None 
+
     def show_dashboard(self):
-        if "dashboard" not in self.views_cache:
-            view = DashboardView()
-            view.on_criteria_create = self.show_new_criteria
-            view.on_criteria_edit = self.show_edit_criteria
-            view.on_start_evaluation = self.show_start_evaluation
+        # O Dashboard é a exceção: ele não é limpo, apenas criado uma vez
+        if self.dashboard_view is None:
+            self.dashboard_view = DashboardView(
+                on_start_evaluation = self.show_start_evaluation,
+                on_criteria_edit = self.show_edit_criteria,
+                on_new_criteria = self.show_new_criteria,
+                on_settings=self.show_settings,
+                on_all_criteria=self.show_all_criteria_view
+            )
             
-            self.stacked_widget.addWidget(view)
-            self.views_cache["dashboard"] = view
+            self.stacked_widget.addWidget(self.dashboard_view)
 
-        self.stacked_widget.setCurrentWidget(self.views_cache["dashboard"])
+        # Se havia uma tela de arquivo ou resultado na frente, nós a destruímos
+        self.clear_dynamic_view()
+        self.stacked_widget.setCurrentWidget(self.dashboard_view)
 
+    def show_settings(self):
+        if self.settings_view is None:
+            self.settings_view = SettingsView(
+                on_back = self.show_dashboard
+            )
+            
+            self.stacked_widget.addWidget(self.settings_view)
+        self.stacked_widget.setCurrentWidget(self.settings_view)
+
+    @dynamic_view
     def show_start_evaluation(self, criteria_id):
-        if "evaluation" in self.views_cache:
-            old_view = self.views_cache.pop("evaluation")
-            self.stacked_widget.removeWidget(old_view)
-            old_view.deleteLater() 
-
-        view = EvaluationView(
+        self.current_dynamic_view = EvaluationView(
             criteria_id=criteria_id,
             on_back=self.show_dashboard,
-            
-            # Rota para INICIAR uma NOVA avaliação (vai pro Loading)
             on_start_processing=self.show_loading_view, 
-            
-            # Rota para VER uma avaliação ANTIGA do histórico (pula direto pros Resultados)
             on_view_results=lambda eval_id: self.show_results(eval_id, criteria_id), 
-            
-            # Rota para VER um arquivo de código
-            on_view_file=lambda submission: self.show_file_view(submission, criteria_id)
+            on_view_file=lambda submission: self.show_file_view(submission)
         )
 
-        self.stacked_widget.addWidget(view)
-        self.views_cache["evaluation"] = view
-        self.stacked_widget.setCurrentWidget(view)
-
-    # --- A Nova Rota de Arquivos ---
-    def show_file_view(self, submission, criteria_id):
-        if "file_view" in self.views_cache:
-            old_view = self.views_cache.pop("file_view")
-            self.stacked_widget.removeWidget(old_view)
-            old_view.deleteLater()
-
-        view = FileView(
+    def show_file_view(self, submission):
+        file_view = FileView(
             submission=submission,
-            # AQUI ESTÁ A CORREÇÃO: 
-            # Em vez de chamar show_start_evaluation e recriar tudo, 
-            # chamamos a nova rota de retorno.
-            on_back=self.return_to_evaluation 
+            on_back = lambda: self.close_and_return(file_view)
         )
 
-        self.stacked_widget.addWidget(view)
-        self.views_cache["file_view"] = view
-        self.stacked_widget.setCurrentWidget(view)
+        self.stacked_widget.addWidget(file_view)
+        self.stacked_widget.setCurrentWidget(file_view)
 
+    @dynamic_view
     def show_loading_view(self, criteria_id, avaliacao_nome, files):
-        if "loading" in self.views_cache:
-            old_view = self.views_cache.pop("loading")
-            self.stacked_widget.removeWidget(old_view)
-            old_view.deleteLater()
-
-        view = LoadingView(
+        self.current_dynamic_view = LoadingView(
             criteria_id=criteria_id,
             avaliacao_nome=avaliacao_nome,
             files=files,
-            
-            # Se a IA terminar com sucesso, avança para os Resultados repassando o criteria_id
             on_finished=lambda eval_id: self.show_results(eval_id, criteria_id), 
-            
-            # Se der erro, volta para a tela anterior
             on_error=self.handle_evaluation_error 
         )
 
-        self.stacked_widget.addWidget(view)
-        self.views_cache["loading"] = view
-        self.stacked_widget.setCurrentWidget(view)
-
+    @dynamic_view
     def show_results(self, eval_id, criteria_id):
-        if "results" in self.views_cache:
-            old_view = self.views_cache.pop("results")
-            self.stacked_widget.removeWidget(old_view)
-            old_view.deleteLater()
-
-        view = ResultsView(
+        self.current_dynamic_view = ResultsView(
             evaluation_id=eval_id,
-            
-            # Repassando o criteria_id para o botão Voltar conseguir reconstruir a tela anterior
             on_back=lambda: self.show_start_evaluation(criteria_id),
-            
-            # Repassando o criteria_id para a visualização de código saber para onde voltar
-            on_view_file=lambda submission: self.show_file_view(submission, criteria_id)
+            on_view_file=lambda submission: self.show_file_view(submission)
         )
-
-        self.stacked_widget.addWidget(view)
-        self.views_cache["results"] = view
-        self.stacked_widget.setCurrentWidget(view)
 
     def handle_evaluation_error(self, error_msg, criteria_id):
         QMessageBox.critical(self, "Erro na Avaliação", error_msg)
         self.show_start_evaluation(criteria_id)
 
-    def return_to_evaluation(self):
-        """
-        Apenas tira a FileView da frente e devolve o foco para a 
-        EvaluationView que já estava preenchida na memória.
-        """
-        # 1. Limpa a tela de leitura de código pesada da RAM
-        if "file_view" in self.views_cache:
-            old_view = self.views_cache.pop("file_view")
-            self.stacked_widget.removeWidget(old_view)
-            old_view.deleteLater()
-            
-        # 2. Puxa a tela de avaliação intacta (com textos e arquivos) de volta pro topo
-        if "evaluation" in self.views_cache:
-            self.stacked_widget.setCurrentWidget(self.views_cache["evaluation"])
-
-    # --- Placeholders ---
     def show_new_criteria(self):
-        print("Navegando para: New Criteria")
+        new_criteria_view = NewCriteriaView(
+            on_criteria_created = lambda: self.update_dashboard_and_return(new_criteria_view),
+            on_back = lambda: self.close_and_return(new_criteria_view)
+        )
 
-    def show_edit_criteria(self, criteria_id, all_criteria=False):
-        print(f"Navegando para: Edit Criteria (ID: {criteria_id})")
+        self.stacked_widget.addWidget(new_criteria_view)
+        self.stacked_widget.setCurrentWidget(new_criteria_view)
+
+    def show_edit_criteria(self, criteria_id):
+        edit_criteria_view = EditCriteriaView(
+            on_criteria_updated = lambda: self.update_dashboard_and_return(edit_criteria_view),
+            on_back = lambda: self.close_and_return(edit_criteria_view),
+            criteria_id = criteria_id
+        )
+
+        self.stacked_widget.addWidget(edit_criteria_view)
+        self.stacked_widget.setCurrentWidget(edit_criteria_view)
+
+    @dynamic_view
+    def show_all_criteria_view(self):
+        self.current_dynamic_view = AllCriteriaView(
+            on_criteria_create=self.show_new_criteria,
+            on_criteria_edit=self.show_edit_criteria,
+            on_back=self.show_dashboard,
+            on_criteria_delete=self.dashboard_view.load_criteria,
+            on_start_evaluation=self.show_start_evaluation
+        )
+
+    def update_dashboard_and_return(self, view):
+        self.dashboard_view.load_criteria()
+        if self.current_dynamic_view is not None:
+            self.current_dynamic_view.build_criteria_buttons()
+        self.close_and_return(view)
+
+    def close_and_return(self, view):
+        self.stacked_widget.removeWidget(view)
+        view.deleteLater()
+        self.stacked_widget.setCurrentWidget(self.current_dynamic_view if self.current_dynamic_view is not None else self.dashboard_view)
