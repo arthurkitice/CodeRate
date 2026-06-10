@@ -37,7 +37,7 @@ ESTILO_GLOBAL = """
         font-size: 13px;
         /* Reduzimos o peso da fonte de 'bold' para '500' para maior elegância */
         font-weight: 500; 
-        color: #d1c1eb; /* Texto acompanhando o tom da borda */
+        color: white; /* Texto acompanhando o tom da borda */
         qproperty-cursor: 13;
     }
     
@@ -130,7 +130,6 @@ ESTILO_GLOBAL = """
     /* BOTÃO DE ALERTA DE SIMILARIDADE         */
     /* ======================================= */
     QFrame#result_card QPushButton#btn_alert {
-        background-color: #a30000;
         border: none;
         border-radius: 4px;
         color: #ffffff;
@@ -138,7 +137,7 @@ ESTILO_GLOBAL = """
         font-size: 14px;
     }
     QFrame#result_card QPushButton#btn_alert:hover {
-        background-color: #ff3333;
+        background-color: rgba(180, 155, 230, 0.2);
     }
 
     /* ======================================= */

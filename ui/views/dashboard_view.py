@@ -83,10 +83,10 @@ class CriterionCard(QFrame):
         botoes_layout.setSpacing(8)
         self.btn_edit = QPushButton("")
         self.btn_delete = QPushButton("")
-        self.btn_edit.setIcon(QIcon("ui/icons/edit_icon.png"))
+        self.btn_edit.setIcon(QIcon("ui/icons/edit_icon.svg"))
         self.btn_edit.setIconSize(QSize(30, 30))
         self.btn_edit.setObjectName("btn_icon")
-        self.btn_delete.setIcon(QIcon("ui/icons/trash_icon.png"))
+        self.btn_delete.setIcon(QIcon("ui/icons/trash_icon.svg"))
         self.btn_delete.setIconSize(QSize(30, 30))
         self.btn_delete.setObjectName("btn_icon")
         self.btn_edit.setFixedSize(30, 30)
@@ -96,8 +96,8 @@ class CriterionCard(QFrame):
         botoes_layout.addWidget(self.btn_delete)
 
         # --- 4. MONTANDO O QUEBRA-CABEÇA NO GRID ---
-        layout.addWidget(self.lbl_name, 0, 0, Qt.AlignTop)
-        layout.addLayout(botoes_layout, 0, 1, Qt.AlignTop | Qt.AlignRight)
+        layout.addWidget(self.lbl_name, 0, 0, Qt.AlignVCenter)
+        layout.addLayout(botoes_layout, 0, 1, Qt.AlignVCenter | Qt.AlignRight)
         
         # AQUI ESTÁ A SEGUNDA PARTE DA CORREÇÃO: 
         # Removido o argumento de alinhamento daqui. 

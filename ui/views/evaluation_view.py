@@ -66,8 +66,8 @@ class EvaluationView(QWidget):
             btn_open = CustomButton(evaluation.name, command=lambda _, e_id=evaluation.id: self.on_view_results(e_id))
             
             btn_del = CustomButton("")
-            btn_del.setIcon(QIcon("ui/icons/trash_icon.png"))
-            btn_del.setIconSize(QSize(40,40))
+            btn_del.setIcon(QIcon("ui/icons/trash_icon.svg"))
+            btn_del.setIconSize(QSize(30,30))
             btn_del.setFixedSize(40, 40)
             btn_del.clicked.connect(lambda _, e_id=evaluation.id: self.delete_evaluation(e_id))
 
@@ -89,8 +89,8 @@ class EvaluationView(QWidget):
             btn_open = CustomButton(submission.file_name, command=lambda _, s=submission: self.on_file_click(s))
             
             btn_del = CustomButton("")
-            btn_del.setIcon(QIcon("ui/icons/trash_icon.png"))
-            btn_del.setIconSize(QSize(40,40))
+            btn_del.setIcon(QIcon("ui/icons/trash_icon.svg"))
+            btn_del.setIconSize(QSize(30,30))
             btn_del.setFixedSize(40, 40)
             btn_del.clicked.connect(lambda _, s=submission: self.remove_file(s))
 

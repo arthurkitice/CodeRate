@@ -79,7 +79,7 @@ class AllCriteriaView(QWidget):
             # Botão editar
             btn_edit = QPushButton("")
             btn_edit.setObjectName("btn_icon")
-            btn_edit.setIcon(QIcon("ui/icons/edit_icon.png"))
+            btn_edit.setIcon(QIcon("ui/icons/edit_icon.svg"))
             btn_edit.setIconSize(QSize(30, 30))
             btn_edit.setFixedSize(32, 32)
             btn_edit.setCursor(Qt.PointingHandCursor)
@@ -91,7 +91,7 @@ class AllCriteriaView(QWidget):
             # Botão remover
             btn_remove = QPushButton("")
             btn_remove.setObjectName("btn_icon")
-            btn_remove.setIcon(QIcon("ui/icons/trash_icon.png"))
+            btn_remove.setIcon(QIcon("ui/icons/trash_icon.svg"))
             btn_remove.setIconSize(QSize(30, 30))
             btn_remove.setFixedSize(32, 32)
             btn_remove.setCursor(Qt.PointingHandCursor)

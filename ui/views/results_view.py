@@ -112,7 +112,7 @@ class ResultsView(QWidget):
         self.empty_frame.setObjectName("empty_state_frame")
         empty_layout = QVBoxLayout(self.empty_frame)
         
-        lbl_empty = QLabel("Selecione o ícone de visualização (👁️)\nou de alerta (!) em um arquivo\npara exibir os detalhes aqui.")
+        lbl_empty = QLabel("Selecione o ícone de mensagem\nou de alerta em um arquivo\npara exibir os detalhes aqui.")
         lbl_empty.setObjectName("empty_state_text")
         lbl_empty.setAlignment(Qt.AlignCenter)
         empty_layout.addWidget(lbl_empty)

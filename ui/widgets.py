@@ -88,10 +88,11 @@ class ScoreCard(QFrame):
         self.lbl_score.setObjectName("score_text")
 
         self.btn_edit = QPushButton("")
-        self.btn_edit.setIcon(QIcon("ui/icons/edit_icon.png")) # Ajuste o caminho do seu ícone
-        self.btn_edit.setIconSize(QSize(18, 18))
+        self.btn_edit.setIcon(QIcon("ui/icons/edit_icon.svg")) # Ajuste o caminho do seu ícone
+        self.btn_edit.setIconSize(QSize(25, 25))
         self.btn_edit.setObjectName("btn_icon")
         self.btn_edit.setFixedSize(25, 25)
+        self.btn_edit.setCursor(Qt.PointingHandCursor)
 
         layout.addWidget(self.lbl_score)
         layout.addWidget(self.btn_edit, 0, Qt.AlignRight)
@@ -123,15 +124,19 @@ class ResultCard(QFrame):
 
         # Botão Alerta (Só entra se houver similaridade)
         if self.submission.similarity:
-            self.btn_alert = QPushButton("!")
+            self.btn_alert = QPushButton("")
             self.btn_alert.setObjectName("btn_alert")
-            self.btn_alert.setFixedSize(25, 25)
+            self.btn_alert.setIcon(QIcon("ui/icons/warning.svg"))
+            self.btn_alert.setIconSize(QSize(25,25))
+            self.btn_alert.setFixedSize(30, 30)
             layout.addWidget(self.btn_alert)
             self.btn_alert.clicked.connect(lambda: self.view_similarity_requested.emit(self.submission))
 
         # Botão Olho (Feedback)
-        self.btn_eye = QPushButton("👁️") # Substitua por QIcon se tiver um SVG de olho
+        self.btn_eye = QPushButton("")
         self.btn_eye.setObjectName("btn_icon")
+        self.btn_eye.setIcon(QIcon("ui/icons/message.svg"))
+        self.btn_eye.setIconSize(QSize(25,25))
         self.btn_eye.setFixedSize(30, 30)
         layout.addWidget(self.btn_eye)
         
